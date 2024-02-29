@@ -39,13 +39,12 @@ export class MooBeam extends Scene {
     }
 
     move_forward() {
-        let target = {x: this.player.x + 0.5, y: this.player.y + 0.5, z: this.player.z + 0.5};
+        let target = {x: this.player.x + 1, y: this.player.y + 1, z: this.player.z + 1};
         let t = 0.05;
 
         this.player.x += (target.x - this.player.x) * t;
         this.player.y += (target.y - this.player.y) * t;
         this.player.z += (target.z - this.player.z) * t;
-
     }
 
     display(context, program_state) {
