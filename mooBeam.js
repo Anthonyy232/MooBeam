@@ -178,7 +178,7 @@ export class MooBeam extends Scene {
             .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
             .times(Mat4.rotation(time / 2.5, 0 , 1, 0))
 
-        if (false) { // For testing purposes set to false so the camera can fly around
+        if (true) { // For testing purposes set to false so the camera can fly around
             let third_person = Mat4.inverse(Mat4.identity()
                 .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
                 .times(Mat4.translation(0,5,13))
