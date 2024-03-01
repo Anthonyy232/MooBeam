@@ -38,7 +38,7 @@ export class MooBeam extends Scene {
         };
 
         this.starting_location = new player(0, 20, 0)
-        this.movement_speed = 15;
+        this.movement_speed = 100;
         this.collided = false;
         this.begin_game = false;
         this.end_game = false;
@@ -112,10 +112,14 @@ export class MooBeam extends Scene {
         this.key_triggered_button("Isometric View", ["Control", "0"], () => this.attached = () => null);
         this.new_line();
         this.key_triggered_button("Behind View", ["Control", "1"], () => this.attached = () => this.object);
-        this.key_triggered_button("Move forward", ["w"], this.move_forward);
-        this.key_triggered_button("Move backward", ["s"], this.move_backward);
-        this.key_triggered_button("Move left", ["a"], this.move_left);
-        this.key_triggered_button("Move right", ["d"], this.move_right);
+        //this.key_triggered_button("Move forward", ["w"], this.move_forward);
+        //this.key_triggered_button("Move backward", ["s"], this.move_backward);
+        //this.key_triggered_button("Move left", ["a"], this.move_left);
+        //this.key_triggered_button("Move right", ["d"], this.move_right);
+        this.key_triggered_button("Move forward", ["i"], this.move_forward);
+        this.key_triggered_button("Move backward", ["k"], this.move_backward);
+        this.key_triggered_button("Move left", ["j"], this.move_left);
+        this.key_triggered_button("Move right", ["l"], this.move_right);
         this.key_triggered_button("Reset game", ["r"], this.reset);
     }
 
@@ -176,6 +180,8 @@ export class MooBeam extends Scene {
 
         this.ufo_state = Mat4.identity()
             .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
+            //hover animation
+            .times(Mat4.translation(0, 0.3*Math.sin(time*2), 0))
             .times(Mat4.rotation(time / 2.5, 0 , 1, 0))
 
         if (true) { // For testing purposes set to false so the camera can fly around
