@@ -209,4 +209,3 @@ export class MooBeam extends Scene {
         }
     }
 }
-
