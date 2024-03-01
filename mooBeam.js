@@ -44,6 +44,7 @@ export class MooBeam extends Scene {
         this.end_game = false;
         this.score = 0;
         this.time = 90;
+        this.show_beam = false;
 
         // Decrement the time every second
         let timer = setInterval(() => {
@@ -73,20 +74,21 @@ export class MooBeam extends Scene {
 
         // *** Materials
         this.materials = {
-            ufo_material: new Material(new Fake_Bump_Map(1), {
-                color: hex_color("#000000"), ambient: 0.5, diffusivity: 0.5, specularity: 1,
-                texture: new Texture("assets/stars.png")
+            ufo_material: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#000000"), ambient: 0.2, diffusivity: 0.5, specularity: 1,
+                texture: new Texture("assets/ufo.jpg")
             }),
-            skybox: new Material(new Textured_Phong, {
+            skybox: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 1, diffusivity: 0, specularity: 0,
                 texture: new Texture("assets/skybox.png")
             }),
-            floor_material: new Material(new Fake_Bump_Map(1), {
-                color: hex_color("#000000"), ambient: 0.5, diffusivity: 0, specularity: 1,
+            floor_material: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#000000"), ambient: 0.4, diffusivity: 0.5, specularity: 0.5,
                 texture: new Texture("assets/floor.jpg")
             }),
-            skyscraper_material: new Material(new Fake_Bump_Map(1), {
-                color: hex_color("#71706E"), ambient: 0.5, diffusivity: 0, specularity: 1
+            skyscraper_material: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#000000"), ambient: 0.4, diffusivity: 0.5, specularity: 1,
+                texture: new Texture("assets/skyscrapper.png")
             })
         }
         this.initial_camera_location = Mat4.look_at(vec3(0, 10 + this.starting_location.y, 20), vec3(0, this.starting_location.y, 0), vec3(0, 1 + this.starting_location.y, 0));
@@ -141,6 +143,8 @@ export class MooBeam extends Scene {
         let target = {z: this.player.z - this.movement_speed};
         let t = 0.01;
         this.player.z += (target.z - this.player.z) * t;
+
+        //also need to involve camera position as the relative
     }
     move_backward() {
         this.begin_game = true;
@@ -170,48 +174,50 @@ export class MooBeam extends Scene {
         if (!context.scratchpad.controls) {
             this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
         }
-        if (!this.begin_game) {
-            program_state.set_camera(this.initial_camera_location);
-        }
-        program_state.projection_transform = Mat4.perspective(
-            Math.PI / 4, context.width / context.height, .1, 1000);
+        if (!this.end_game) {
+            if (!this.begin_game) {
+                program_state.set_camera(this.initial_camera_location);
+            }
+            program_state.projection_transform = Mat4.perspective(
+                Math.PI / 4, context.width / context.height, .1, 1000);
 
-        const time = program_state.animation_time / 1000
+            const time = program_state.animation_time / 1000
 
-        this.ufo_state = Mat4.identity()
-            .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
-            //hover animation
-            .times(Mat4.translation(0, 0.3*Math.sin(time*2), 0))
-            .times(Mat4.rotation(time / 2.5, 0 , 1, 0))
-
-        if (true) { // For testing purposes set to false so the camera can fly around
-            let third_person = Mat4.inverse(Mat4.identity()
+            this.ufo_state = Mat4.identity()
                 .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
-                .times(Mat4.translation(0,5,13))
-                .times(Mat4.rotation(-Math.PI / 8, 1, 0, 0 ))
-            )
-            let angle = Math.atan(1 / Math.sqrt(2));
-            let isometric = Mat4.inverse(Mat4.identity()
-                .times(Mat4.rotation(angle, 1, 0, 0))
-                .times(Mat4.rotation(Math.PI / 4, 0, 1, 0))
-                .times(Mat4.translation(-this.player.x, -this.player.y, -this.player.z))
-            );
-            this.object = this.ufo_state;
-            let desired = this.attached && this.attached() != null ? third_person : this.initial_camera_location // <--set as initial until isometric works
-            program_state.set_camera(desired.map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1)));
-            //^figure out how to do quaternion blending so when pressing the keys there isn't a slight camera give
-        }
+                //hover animation
+                .times(Mat4.translation(0, 0.3*Math.sin(time*2), 0))
+                .times(Mat4.rotation(time / 2.5, 0 , 1, 0))
 
-        // The parameters of the Light are: position, color, size
-        let light_position = vec4(this.player.x, this.player.y, this.player.z, 0);
-        program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
+            if (false) { // For testing purposes set to false so the camera can fly around
+                let third_person = Mat4.inverse(Mat4.identity()
+                    .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
+                    .times(Mat4.translation(0,5,13))
+                    .times(Mat4.rotation(-Math.PI / 8, 1, 0, 0 ))
+                )
+                let angle = Math.atan(1 / Math.sqrt(2));
+                let isometric = Mat4.inverse(Mat4.identity()
+                    .times(Mat4.rotation(angle, 1, 0, 0))
+                    .times(Mat4.rotation(Math.PI / 4, 0, 1, 0))
+                    .times(Mat4.translation(-this.player.x, -this.player.y, -this.player.z))
+                );
+                this.object = this.ufo_state;
+                let desired = this.attached && this.attached() != null ? third_person : this.initial_camera_location // <--set as initial until isometric works
+                program_state.set_camera(desired.map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1)));
+                //^figure out how to do quaternion blending so when pressing the keys there isn't a slight camera give
+            }
 
-        this.shapes.ufo.draw(context, program_state, this.ufo_state, this.materials.ufo_material);
-        this.shapes.sky.draw(context, program_state, this.sky_state, this.materials.skybox);
-        this.shapes.floor.draw(context, program_state, this.floor_state, this.materials.floor_material);
+            // The parameters of the Light are: position, color, size
+            program_state.lights = [new Light(
+                Mat4.rotation(time / 300, this.player.x, this.player.y, this.player.z).times(vec4(3, 2, 10, 1)), color(1, .7, .7, 1), 10000)];
 
-        for(let i = 0; i < this.skyscrapers_states.length; i++) {
-            this.shapes.skyscraper.draw(context, program_state, this.skyscrapers_states[i], this.materials.skyscraper_material);
+            this.shapes.ufo.draw(context, program_state, this.ufo_state, this.materials.ufo_material);
+            this.shapes.sky.draw(context, program_state, this.sky_state, this.materials.skybox);
+            this.shapes.floor.draw(context, program_state, this.floor_state, this.materials.floor_material);
+
+            for(let i = 0; i < this.skyscrapers_states.length; i++) {
+                this.shapes.skyscraper.draw(context, program_state, this.skyscrapers_states[i], this.materials.skyscraper_material);
+            }
         }
     }
 }
