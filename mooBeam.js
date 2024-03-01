@@ -87,7 +87,7 @@ export class MooBeam extends Scene {
                 texture: new Texture("assets/floor.jpg")
             }),
             skyscraper_material: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#000000"), ambient: 0.4, diffusivity: 0.5, specularity: 1,
+                color: hex_color("#000000"), ambient: 0.6, diffusivity: 0.5, specularity: 1,
                 texture: new Texture("assets/skyscrapper.png")
             })
         }
@@ -114,15 +114,19 @@ export class MooBeam extends Scene {
         this.key_triggered_button("Isometric View", ["Control", "0"], () => this.attached = () => null);
         this.new_line();
         this.key_triggered_button("Behind View", ["Control", "1"], () => this.attached = () => this.object);
-        //this.key_triggered_button("Move forward", ["w"], this.move_forward);
-        //this.key_triggered_button("Move backward", ["s"], this.move_backward);
-        //this.key_triggered_button("Move left", ["a"], this.move_left);
-        //this.key_triggered_button("Move right", ["d"], this.move_right);
+
+        this.key_triggered_button("Move forward", ["w"], this.move_forward);
+        this.key_triggered_button("Move backward", ["s"], this.move_backward);
+        this.key_triggered_button("Move left", ["a"], this.move_left);
+        this.key_triggered_button("Move right", ["d"], this.move_right);
+        /*
         this.key_triggered_button("Move forward", ["i"], this.move_forward);
         this.key_triggered_button("Move backward", ["k"], this.move_backward);
         this.key_triggered_button("Move left", ["j"], this.move_left);
         this.key_triggered_button("Move right", ["l"], this.move_right);
+         */
         this.key_triggered_button("Reset game", ["r"], this.reset);
+        this.key_triggered_button("Beam cows", ["b"], () => {});
     }
 
     reset() {
@@ -189,7 +193,7 @@ export class MooBeam extends Scene {
                 .times(Mat4.translation(0, 0.3*Math.sin(time*2), 0))
                 .times(Mat4.rotation(time / 2.5, 0 , 1, 0))
 
-            if (false) { // For testing purposes set to false so the camera can fly around
+            if (true) { // For testing purposes set to false so the camera can fly around
                 let third_person = Mat4.inverse(Mat4.identity()
                     .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
                     .times(Mat4.translation(0,5,13))
