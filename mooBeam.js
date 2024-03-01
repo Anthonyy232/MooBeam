@@ -60,9 +60,9 @@ export class MooBeam extends Scene {
         // Generate 30 random skyscrapers
         this.skyscrapers_states = [];
 
-        for(let i = 0; i < 30; i++) { // replace 10 with the number of skyscrapers you want
-            let x = Math.random() * 100 - 50; // replace with your desired x position
-            let z = Math.random() * 100 - 50; // replace with your desired z position
+        for(let i = 0; i < 30; i++) {
+            let x = Math.random() * 100 - 50;
+            let z = Math.random() * 100 - 50;
 
             let skyscraper_state = this.skyscraper_state.times(Mat4.translation(x, 0, z));
             this.skyscrapers_states.push(skyscraper_state);
