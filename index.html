@@ -1,19 +1,39 @@
 <!DOCTYPE html>
 <html lang="En">
-<head>
+<head >
     <meta charset="UTF-8"/>
     <link href="assets/fav.ico" rel="icon">
     <title>Tiny Graphics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+        .canvas-widget {position: relative;}
+        .top-corner {
+            position: absolute;
+            top: 10px;
+            padding: 10px;
+            background-color: #333;
+            color: #fff;
+            border-radius: 5px;
+        }
+        .left {left: 10px;}
+        .right {right: 10px;}
+    </style>
 </head>
-<body style="background: White">
-<div class="canvas-widget" id="main-canvas"></div>
-<script type=module>
-    // ********************* THE ENTRY POINT OF YOUR WHOLE PROGRAM STARTS HERE *********************
-    const element_to_replace = document.querySelector("#main-canvas");
-    import {Main_Scene, Additional_Scenes, Canvas_Widget} from './main-scene.js';
-    const scenes = [Main_Scene, ...Additional_Scenes].map(scene => new scene());
-    new Canvas_Widget(element_to_replace, scenes);
-</script>
+<body style="background: #ACBFA4">
+<div class="canvas-widget" id="main-canvas">
+    <div class="top-corner left">Score |  <span id="score">0</span></div>
+    <div class="top-corner right">Time |  <span id="timer">1:30</span></div>
+</div>
 
+    <script type=module>
+        // ********************* THE ENTRY POINT OF YOUR WHOLE PROGRAM STARTS HERE *********************
+        const element_to_replace = document.querySelector("#main-canvas");
+        import {Main_Scene, Additional_Scenes, Canvas_Widget} from './main-scene.js';
+        const scenes = [Main_Scene, ...Additional_Scenes].map(scene => new scene());
+        new Canvas_Widget(element_to_replace, scenes);
+    </script>
 </body>
 </html>

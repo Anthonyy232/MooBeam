@@ -1,5 +1,8 @@
 import {defs, tiny} from './examples/common.js';
 import { Shape_From_File } from './examples/obj-file-demo.js';
+const score_html = document.querySelector('#score')
+const time_html = document.querySelector('#timer')
+//potentially add a boolean to display "move to start game"
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Texture, Material, Scene,
@@ -17,6 +20,12 @@ class player {
     }
 }
 
+function format_time(time) {
+    let minutes_digits = Math.floor(time / 60);
+    let seconds_digits = time % 60;
+    return `${minutes_digits}:${seconds_digits}`;
+}
+
 export class MooBeam extends Scene {
     constructor() {
         super();
@@ -27,15 +36,32 @@ export class MooBeam extends Scene {
             floor: new Square(),
             skyscraper: new Square()
         };
-        this.start_y = 20;
-        this.movement_speed = 10;
+
+        this.starting_location = new player(0, 20, 0)
+        this.movement_speed = 15;
+        this.collided = false;
+        this.begin_game = false;
+        this.score = 0;
+        this.time = 90;
+
+        // Decrement the time every second
+        let timer = setInterval(() => {
+            //supposed to check this.begin_game && !this.collided too but couldn't get it working for some reason, the move_*() functions set this.begin_game to true, but it doesn't see it
+            if(this.time > 0) {
+                this.time -= 1;
+            } else {
+                clearInterval(timer);
+            }
+        }, 1000);
 
 
         this.sky_state = Mat4.identity().times(Mat4.scale(200, 200, 200));
         this.floor_state = Mat4.identity().times(Mat4.scale(200, 200, 200)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
-        this.player = new player(0, this.start_y , 0);
+        this.player = new player(0, this.starting_location.y , 0);
         this.ufo_state = Mat4.identity();
         this.skyscraper_state = Mat4.identity().times(Mat4.scale(5, 25, 5)).times(Mat4.translation(0, 0, -5));
+
+
 
         // *** Materials
         this.materials = {
@@ -55,7 +81,7 @@ export class MooBeam extends Scene {
                 color: hex_color("#71706E"), ambient: 0.5, diffusivity: 0, specularity: 1
             })
         }
-        this.initial_camera_location = Mat4.look_at(vec3(0, 10 + this.start_y, 20), vec3(0, this.start_y, 0), vec3(0, 1 + this.start_y, 0));
+        this.initial_camera_location = Mat4.look_at(vec3(0, 10 + this.starting_location.y, 20), vec3(0, this.starting_location.y, 0), vec3(0, 1 + this.starting_location.y, 0));
 
         // Generate 30 random skyscrapers
         this.skyscrapers_states = [];
@@ -77,9 +103,20 @@ export class MooBeam extends Scene {
         this.key_triggered_button("Move backward", ["s"], this.move_backward);
         this.key_triggered_button("Move left", ["a"], this.move_left);
         this.key_triggered_button("Move right", ["d"], this.move_right);
+        this.key_triggered_button("Reset game", ["r"], this.reset);
+    }
+
+    reset() {
+        this.collided = false;
+        this.begin_game = false;
+        this.score = 0;
+        this.time = 90;
+        this.player = new player(0, this.starting_location.y , 0);
+        this.ufo_state = Mat4.identity();
     }
 
     move_forward() {
+        this.begin_game = true;
         //smooth motion but not smooth enough, consider transitioning to position, vel, accel style
         //need to take care of release key if doing velocity+accel
         let target = {z: this.player.z - this.movement_speed};
@@ -87,29 +124,37 @@ export class MooBeam extends Scene {
         this.player.z += (target.z - this.player.z) * t;
     }
     move_backward() {
+        this.begin_game = true;
         let target = {z: this.player.z + this.movement_speed};
         let t = 0.01;
         this.player.z += (target.z - this.player.z) * t;
     }
     move_left() {
+        this.begin_game = true;
         let target = {x: this.player.x - this.movement_speed};
         let t = 0.01;
         this.player.x += (target.x - this.player.x) * t;
     }
     move_right() {
+        this.begin_game = true;
         let target = {x: this.player.x + this.movement_speed};
         let t = 0.01;
         this.player.x += (target.x - this.player.x) * t;
     }
 
     display(context, program_state) {
+        // Refresh the score and timer HTML elements
+        score_html.innerHTML = this.score.toString()
+        time_html.innerHTML = format_time(this.time)
+
+        // Display bottom control panel
         if (!context.scratchpad.controls) {
             this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
             program_state.set_camera(this.initial_camera_location);
         }
-
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, .1, 1000);
+
         const time = program_state.animation_time / 1000
 
         this.ufo_state = Mat4.identity()
@@ -119,7 +164,7 @@ export class MooBeam extends Scene {
         if (true) { // For testing purposes set to false so the camera can fly around
             let third_person = Mat4.inverse(Mat4.identity()
                 .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
-                .times(Mat4.translation(0,5,15))
+                .times(Mat4.translation(0,5,13))
                 .times(Mat4.rotation(-Math.PI / 8, 1, 0, 0 ))
             )
             let angle = Math.atan(1 / Math.sqrt(2));
@@ -137,7 +182,6 @@ export class MooBeam extends Scene {
         // The parameters of the Light are: position, color, size
         let light_position = vec4(this.player.x, this.player.y, this.player.z, 0);
         program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
-
 
         this.shapes.ufo.draw(context, program_state, this.ufo_state, this.materials.ufo_material);
         this.shapes.sky.draw(context, program_state, this.sky_state, this.materials.skybox);
