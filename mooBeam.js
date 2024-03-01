@@ -9,7 +9,7 @@ const {
 } = tiny;
 
 const {
-    Textured_Phong, Fake_Bump_Map, Square
+    Textured_Phong, Fake_Bump_Map, Square, Cube
 } = defs
 
 class player {
@@ -33,13 +33,15 @@ export class MooBeam extends Scene {
             object: new defs.Subdivision_Sphere(4),
             ufo: new Shape_From_File("assets/Ufo.obj"),
             sky: new defs.Subdivision_Sphere(5),
-            floor: new Square()
+            floor: new Square(),
+            skyscraper: new Cube()
         };
 
         this.starting_location = new player(0, 20, 0)
         this.movement_speed = 15;
         this.collided = false;
         this.begin_game = false;
+        this.end_game = false;
         this.score = 0;
         this.time = 90;
 
@@ -47,17 +49,25 @@ export class MooBeam extends Scene {
         let timer = setInterval(() => {
             //supposed to check this.begin_game && !this.collided too but couldn't get it working for some reason, the move_*() functions set this.begin_game to true, but it doesn't see it
             if(this.time > 0) {
-                this.time -= 1;
+                --this.time;
             } else {
+                this.end_game = true;
                 clearInterval(timer);
             }
         }, 1000);
 
 
-        this.sky_state = Mat4.identity().times(Mat4.scale(200, 200, 200));
-        this.floor_state = Mat4.identity().times(Mat4.scale(200, 200, 200)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+        this.world_size = 200;
+        this.sky_state = Mat4.identity().times(Mat4.scale(this.world_size, this.world_size, this.world_size));
+        this.floor_state = Mat4.identity().times(Mat4.scale(this.world_size, this.world_size, this.world_size)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
         this.player = new player(0, this.starting_location.y , 0);
         this.ufo_state = Mat4.identity();
+        this.skyscrapper_height = 25;
+        this.skyscrapper_size = 10;
+        this.skyscraper_state = Mat4.identity()
+            .times(Mat4.scale(this.skyscrapper_size, this.skyscrapper_height, this.skyscrapper_size))
+            .times(Mat4.translation(0, 1, 0)); //translate it vertically so the base is at the floor height
+        this.skyscrapper_count = 30;
 
 
 
@@ -71,12 +81,31 @@ export class MooBeam extends Scene {
                 color: hex_color("#000000"), ambient: 1, diffusivity: 0, specularity: 0,
                 texture: new Texture("assets/skybox.png")
             }),
-            floor_material: new Material(new Fake_Bump_Map, {
+            floor_material: new Material(new Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 0.5, diffusivity: 0, specularity: 1,
                 texture: new Texture("assets/floor.jpg")
+            }),
+            skyscraper_material: new Material(new Fake_Bump_Map(1), {
+                color: hex_color("#71706E"), ambient: 0.5, diffusivity: 0, specularity: 1
             })
         }
         this.initial_camera_location = Mat4.look_at(vec3(0, 10 + this.starting_location.y, 20), vec3(0, this.starting_location.y, 0), vec3(0, 1 + this.starting_location.y, 0));
+
+
+        // Generate random skyscrapers
+        this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_state);
+    }
+
+    generateSkyscrapers(skyscraper_state, num_skyscrapers = this.skyscrapper_count) {
+        let skyscrapers_states = [];
+        for(let i = 0; i < num_skyscrapers; i++) {
+            let x = Math.random() * 100 - 50;
+            let z = Math.random() * 100 - 50;
+
+            let skyscraper_state_transformed = skyscraper_state.times(Mat4.translation(x, 0, z));
+            skyscrapers_states.push(skyscraper_state_transformed);
+        }
+        return skyscrapers_states;
     }
 
     make_control_panel() {
@@ -93,10 +122,12 @@ export class MooBeam extends Scene {
     reset() {
         this.collided = false;
         this.begin_game = false;
+        this.end_game = false;
         this.score = 0;
         this.time = 90;
         this.player = new player(0, this.starting_location.y , 0);
         this.ufo_state = Mat4.identity();
+        this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_state);
     }
 
     move_forward() {
@@ -134,6 +165,8 @@ export class MooBeam extends Scene {
         // Display bottom control panel
         if (!context.scratchpad.controls) {
             this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
+        }
+        if (!this.begin_game) {
             program_state.set_camera(this.initial_camera_location);
         }
         program_state.projection_transform = Mat4.perspective(
@@ -145,7 +178,7 @@ export class MooBeam extends Scene {
             .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
             .times(Mat4.rotation(time / 2.5, 0 , 1, 0))
 
-        if (true) { // For testing purposes set to false so the camera can fly around
+        if (false) { // For testing purposes set to false so the camera can fly around
             let third_person = Mat4.inverse(Mat4.identity()
                 .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
                 .times(Mat4.translation(0,5,13))
@@ -170,6 +203,10 @@ export class MooBeam extends Scene {
         this.shapes.ufo.draw(context, program_state, this.ufo_state, this.materials.ufo_material);
         this.shapes.sky.draw(context, program_state, this.sky_state, this.materials.skybox);
         this.shapes.floor.draw(context, program_state, this.floor_state, this.materials.floor_material);
+
+        for(let i = 0; i < this.skyscrapers_states.length; i++) {
+            this.shapes.skyscraper.draw(context, program_state, this.skyscrapers_states[i], this.materials.skyscraper_material);
+        }
     }
 }
 
