@@ -24,7 +24,8 @@ export class MooBeam extends Scene {
             object: new defs.Subdivision_Sphere(4),
             ufo: new Shape_From_File("assets/Ufo.obj"),
             sky: new defs.Subdivision_Sphere(5),
-            floor: new Square()
+            floor: new Square(),
+            skyscraper: new Square()
         };
         this.start_y = 20;
         this.movement_speed = 10;
@@ -34,6 +35,7 @@ export class MooBeam extends Scene {
         this.floor_state = Mat4.identity().times(Mat4.scale(200, 200, 200)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
         this.player = new player(0, this.start_y , 0);
         this.ufo_state = Mat4.identity();
+        this.skyscraper_state = Mat4.identity().times(Mat4.scale(5, 25, 5)).times(Mat4.translation(0, 0, -5));
 
         // *** Materials
         this.materials = {
@@ -48,9 +50,23 @@ export class MooBeam extends Scene {
             floor_material: new Material(new Fake_Bump_Map, {
                 color: hex_color("#000000"), ambient: 0.5, diffusivity: 0, specularity: 1,
                 texture: new Texture("assets/floor.jpg")
+            }),
+            skyscraper_material: new Material(new Fake_Bump_Map, {
+                color: hex_color("#71706E"), ambient: 0.5, diffusivity: 0, specularity: 1
             })
         }
         this.initial_camera_location = Mat4.look_at(vec3(0, 10 + this.start_y, 20), vec3(0, this.start_y, 0), vec3(0, 1 + this.start_y, 0));
+
+        // Generate 30 random skyscrapers
+        this.skyscrapers_states = [];
+
+        for(let i = 0; i < 30; i++) { // replace 10 with the number of skyscrapers you want
+            let x = Math.random() * 100 - 50; // replace with your desired x position
+            let z = Math.random() * 100 - 50; // replace with your desired z position
+
+            let skyscraper_state = this.skyscraper_state.times(Mat4.translation(x, 0, z));
+            this.skyscrapers_states.push(skyscraper_state);
+        }
     }
 
     make_control_panel() {
@@ -126,6 +142,11 @@ export class MooBeam extends Scene {
         this.shapes.ufo.draw(context, program_state, this.ufo_state, this.materials.ufo_material);
         this.shapes.sky.draw(context, program_state, this.sky_state, this.materials.skybox);
         this.shapes.floor.draw(context, program_state, this.floor_state, this.materials.floor_material);
+        this.shapes.skyscraper.draw(context, program_state, this.skyscraper_state, this.materials.skyscraper_material);
+
+        for(let i = 0; i < this.skyscrapers_states.length; i++) {
+            this.shapes.skyscraper.draw(context, program_state, this.skyscrapers_states[i], this.materials.skyscraper_material);
+        }
     }
 }
 
