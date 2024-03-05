@@ -17,13 +17,16 @@ class player {
         this.x = x;
         this.y = y;
         this.z = z;
+        this.velocity = {x: 0, y: 0, z: 0};
+        this.acceleration = {x: 0.01, y: 0, z: 0.01};
+        this.max_speed = 0.1;
     }
 }
 
 function format_time(time) {
     let minutes_digits = Math.floor(time / 60);
     let seconds_digits = time % 60;
-    return `${minutes_digits}:${seconds_digits}`;
+    return `${minutes_digits}:${seconds_digits.toString().padStart(2, '0')}`;
 }
 
 export class MooBeam extends Scene {
@@ -74,6 +77,9 @@ export class MooBeam extends Scene {
 
         // *** Materials
         this.materials = {
+            regular: new Material(new defs.Phong_Shader(), {
+                color: hex_color("#000000"), ambient: 0.2, diffusivity: 0.5, specularity: 1
+            }),
             ufo_material: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 0.2, diffusivity: 0.5, specularity: 1,
                 texture: new Texture("assets/ufo.jpg")
@@ -115,16 +121,18 @@ export class MooBeam extends Scene {
         this.new_line();
         this.key_triggered_button("Behind View", ["Control", "1"], () => this.attached = () => this.object);
 
-        this.key_triggered_button("Move forward", ["w"], this.move_forward);
-        this.key_triggered_button("Move backward", ["s"], this.move_backward);
-        this.key_triggered_button("Move left", ["a"], this.move_left);
-        this.key_triggered_button("Move right", ["d"], this.move_right);
-        /*
-        this.key_triggered_button("Move forward", ["i"], this.move_forward);
-        this.key_triggered_button("Move backward", ["k"], this.move_backward);
-        this.key_triggered_button("Move left", ["j"], this.move_left);
-        this.key_triggered_button("Move right", ["l"], this.move_right);
-         */
+        this.key_triggered_button("Move forward", ["w"], this.move_forward, "#6E6460", () => {
+            this.player.velocity.z = 0;
+        });
+        this.key_triggered_button("Move backward", ["s"], this.move_backward, "#6E6460", () => {
+            this.player.velocity.z = 0;
+        });
+        this.key_triggered_button("Move left", ["a"], this.move_left, "#6E6460", () => {
+            this.player.velocity.x = 0;
+        });
+        this.key_triggered_button("Move right", ["d"], this.move_right, "#6E6460", () => {
+            this.player.velocity.x = 0;
+        });
         this.key_triggered_button("Reset game", ["r"], this.reset);
         this.key_triggered_button("Beam cows", ["b"], () => {});
     }
@@ -138,36 +146,46 @@ export class MooBeam extends Scene {
         this.player = new player(0, this.starting_location.y , 0);
         this.ufo_state = Mat4.identity();
         this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_state);
+        this.player.velocity = {x: 0, y: 0, z: 0};
     }
 
     move_forward() {
         this.begin_game = true;
-        //smooth motion but not smooth enough, consider transitioning to position, vel, accel style
-        //need to take care of release key if doing velocity+accel
-        let target = {z: this.player.z - this.movement_speed};
-        let t = 0.01;
-        this.player.z += (target.z - this.player.z) * t;
-
-        //also need to involve camera position as the relative
+        this.player.velocity.z -= this.player.acceleration.z;
+        if (Math.abs(this.player.velocity.z) > this.max_speed) {
+            this.player.velocity.z = -this.max_speed
+        }
+        this.player.z += this.player.velocity.z;
     }
+
     move_backward() {
         this.begin_game = true;
-        let target = {z: this.player.z + this.movement_speed};
-        let t = 0.01;
-        this.player.z += (target.z - this.player.z) * t;
+        this.player.velocity.z += this.player.acceleration.z;
+        if (Math.abs(this.player.velocity.z) > this.max_speed) {
+            this.player.velocity.z = this.max_speed
+        }
+        this.player.z += this.player.velocity.z;
     }
+
     move_left() {
         this.begin_game = true;
-        let target = {x: this.player.x - this.movement_speed};
-        let t = 0.01;
-        this.player.x += (target.x - this.player.x) * t;
+        this.player.velocity.x -= this.player.acceleration.x;
+        if (Math.abs(this.player.velocity.x) > this.max_speed) {
+            this.player.velocity.x = -this.max_speed
+        }
+        this.player.x += this.player.velocity.x;
     }
+
     move_right() {
         this.begin_game = true;
-        let target = {x: this.player.x + this.movement_speed};
-        let t = 0.01;
-        this.player.x += (target.x - this.player.x) * t;
+        this.player.velocity.x += this.player.acceleration.x;
+        if (Math.abs(this.player.velocity.x) > this.max_speed) {
+            this.player.velocity.x = this.max_speed
+        }
+        this.player.x += this.player.velocity.x;
     }
+
+
 
     display(context, program_state) {
         // Refresh the score and timer HTML elements
@@ -207,8 +225,7 @@ export class MooBeam extends Scene {
                 );
                 this.object = this.ufo_state;
                 let desired = this.attached && this.attached() != null ? third_person : this.initial_camera_location // <--set as initial until isometric works
-                program_state.set_camera(desired.map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1)));
-                //^figure out how to do quaternion blending so when pressing the keys there isn't a slight camera give
+                program_state.set_camera(desired);
             }
 
             // The parameters of the Light are: position, color, size
