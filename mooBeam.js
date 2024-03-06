@@ -72,6 +72,7 @@ export class MooBeam extends Scene {
             .times(Mat4.scale(this.skyscrapper_size, this.skyscrapper_height, this.skyscrapper_size))
             .times(Mat4.translation(0, 1, 0)); //translate it vertically so the base is at the floor height
         this.skyscrapper_count = 30;
+        this.camera_angle = 0;
 
 
 
@@ -135,6 +136,8 @@ export class MooBeam extends Scene {
         });
         this.key_triggered_button("Reset game", ["r"], this.reset);
         this.key_triggered_button("Beam cows", ["b"], () => {});
+        this.key_triggered_button("Turn left", ["n"], this.turn_left, "#6E6460");
+        this.key_triggered_button("Turn right", ["m"], this.turn_right, "#6E6460");
     }
 
     reset() {
@@ -185,7 +188,13 @@ export class MooBeam extends Scene {
         this.player.x += this.player.velocity.x;
     }
 
+    turn_left() {
+        this.camera_angle -= Math.PI / 36;
+    }
 
+    turn_right() {
+        this.camera_angle += Math.PI / 36;
+    }
 
     display(context, program_state) {
         // Refresh the score and timer HTML elements
@@ -214,6 +223,7 @@ export class MooBeam extends Scene {
             if (true) { // For testing purposes set to false so the camera can fly around
                 let third_person = Mat4.inverse(Mat4.identity()
                     .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
+                    .times(Mat4.rotation(this.camera_angle, 0, 1, 0))
                     .times(Mat4.translation(0,5,13))
                     .times(Mat4.rotation(-Math.PI / 8, 1, 0, 0 ))
                 )
