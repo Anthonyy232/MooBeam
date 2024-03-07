@@ -76,11 +76,11 @@ export class MooBeam extends Scene {
         this.floor_state = Mat4.identity().times(Mat4.scale(this.world_size, this.world_size, this.world_size)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
         this.player = new Player(0, this.starting_location.y , 0);
         this.ufo_state = Mat4.identity();
-        this.skyscrapper_height = 25;
-        this.skyscrapper_size = 10;
+        this.skyscraper_height = 25;
+        this.skyscraper_size = 10;
         this.skyscraper_state = Mat4.identity()
-            .times(Mat4.scale(this.skyscrapper_size, this.skyscrapper_height, this.skyscrapper_size))
-        this.skyscrapper_count = 1;
+            .times(Mat4.scale(this.skyscraper_size, this.skyscraper_height, this.skyscraper_size))
+        this.skyscraper_count = 1;
 
 
 
@@ -103,7 +103,7 @@ export class MooBeam extends Scene {
             }),
             skyscraper_material: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 0.6, diffusivity: 0.5, specularity: 1,
-                texture: new Texture("assets/skyscrapper.png")
+                texture: new Texture("assets/skyscraper.png")
             })
         }
         this.initial_camera_location = Mat4.look_at(vec3(0, 10 + this.starting_location.y, 20), vec3(0, this.starting_location.y, 0), vec3(0, 1 + this.starting_location.y, 0));
@@ -112,7 +112,7 @@ export class MooBeam extends Scene {
         // Generate random skyscrapers
         this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_state);
     }
-    generateSkyscrapers(skyscraper_state, num_skyscrapers = this.skyscrapper_count) {
+    generateSkyscrapers(skyscraper_state, num_skyscrapers = this.skyscraper_count) {
         let skyscrapers_states = [];
         let y = 0;
         for(let i = 0; i < num_skyscrapers; i++) {
@@ -122,7 +122,7 @@ export class MooBeam extends Scene {
             let z = -10;
 
             let skyscraper_state_transformed = skyscraper_state.times(Mat4.translation(x, y, z));
-            skyscrapers_states.push(new Skyscraper(skyscraper_state_transformed, this.skyscrapper_size, x, y, z));
+            skyscrapers_states.push(new Skyscraper(skyscraper_state_transformed, this.skyscraper_size, x, y, z));
         }
         return skyscrapers_states;
     }
