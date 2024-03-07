@@ -121,7 +121,7 @@ export class MooBeam extends Scene {
             //let z = Math.random() * 100 - 50;
             let z = -10;
 
-            let skyscraper_state_transformed = skyscraper_state.times(Mat4.translation(x, y, z));
+            let skyscraper_state_transformed = skyscraper_state.times(Mat4.translation(x/this.skyscraper_size, y/this.skyscraper_size, z/this.skyscraper_size));
             skyscrapers_states.push(new Skyscraper(skyscraper_state_transformed, this.skyscraper_size, x, y, z));
         }
         return skyscrapers_states;
