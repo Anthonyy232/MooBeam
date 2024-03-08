@@ -42,6 +42,7 @@ export class MooBeam extends Scene {
         };
 
         this.starting_location = new player(0, 20, 0)
+        this.cow_start = vec3(10, 2, 0);
         this.movement_speed = 100;
         this.collided = false;
         this.begin_game = false;
@@ -153,7 +154,7 @@ export class MooBeam extends Scene {
         this.time = 90;
         this.player = new player(0, this.starting_location.y , 0);
         this.ufo_state = Mat4.identity();
-        this.cow_state = Mat4.identity();
+        this.cow_state = Mat4.identity().times(Mat4.translation(this.cow_start[0], this.cow_start[1], this.cow_start[2]));
         this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_state);
         this.player.velocity = {x: 30, y: 30, z: 30};
     }
@@ -239,7 +240,17 @@ export class MooBeam extends Scene {
             }
 
             this.cow_state = Mat4.identity()
-                .times(Mat4.translation(0, 2, 0))
+                .times(Mat4.translation(this.cow_start[0], this.cow_start[1], this.cow_start[2]))
+                //.times(Mat4.translation(10, 0,0))
+
+            if ( this.player.y < this.cow_start[1] + 20 &&
+                this.player.x < this.cow_start[0] + 3 && this.player.x > this.cow_start[0] - 3 &&
+                this.player.z < this.cow_start[2] + 3 && this.player.z > this.cow_start[2] - 3) {
+
+                this.animated = "start";
+            }
+            console.log(this.player);
+            console.log(this.cow_start);
 
             this.animate_cow(this.local_time, program_state.animation_time);
 
