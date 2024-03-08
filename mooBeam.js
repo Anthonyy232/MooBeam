@@ -35,6 +35,7 @@ export class MooBeam extends Scene {
         this.shapes = {
             object: new defs.Subdivision_Sphere(4),
             ufo: new Shape_From_File("assets/Ufo.obj"),
+            cow: new Shape_From_File("assets/cow.obj"),
             sky: new defs.Subdivision_Sphere(5),
             floor: new Square(),
             skyscraper: new Cube()
@@ -84,6 +85,10 @@ export class MooBeam extends Scene {
                 color: hex_color("#000000"), ambient: 0.2, diffusivity: 0.5, specularity: 1,
                 texture: new Texture("assets/ufo.jpg")
             }),
+            cow_material: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#000000"), ambient: 0.2, diffusivity: 0.5, specularity: 1,
+                texture: new Texture("assets/ufo.jpg")
+            }),
             skybox: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 1, diffusivity: 0, specularity: 0,
                 texture: new Texture("assets/skybox.png")
@@ -121,16 +126,16 @@ export class MooBeam extends Scene {
         this.new_line();
         this.key_triggered_button("Behind View", ["Control", "1"], () => this.attached = () => this.object);
 
-        this.key_triggered_button("Move forward", ["w"], this.move_forward, "#6E6460", () => {
+        this.key_triggered_button("Move forward", ["i"], this.move_forward, "#6E6460", () => {
             this.player.velocity.z = 0;
         });
-        this.key_triggered_button("Move backward", ["s"], this.move_backward, "#6E6460", () => {
+        this.key_triggered_button("Move backward", ["k"], this.move_backward, "#6E6460", () => {
             this.player.velocity.z = 0;
         });
-        this.key_triggered_button("Move left", ["a"], this.move_left, "#6E6460", () => {
+        this.key_triggered_button("Move left", ["j"], this.move_left, "#6E6460", () => {
             this.player.velocity.x = 0;
         });
-        this.key_triggered_button("Move right", ["d"], this.move_right, "#6E6460", () => {
+        this.key_triggered_button("Move right", ["l"], this.move_right, "#6E6460", () => {
             this.player.velocity.x = 0;
         });
         this.key_triggered_button("Reset game", ["r"], this.reset);
@@ -145,6 +150,7 @@ export class MooBeam extends Scene {
         this.time = 90;
         this.player = new player(0, this.starting_location.y , 0);
         this.ufo_state = Mat4.identity();
+        this.cow_state = Mat4.identity();
         this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_state);
         this.player.velocity = {x: 0, y: 0, z: 0};
     }
@@ -211,6 +217,9 @@ export class MooBeam extends Scene {
                 .times(Mat4.translation(0, 0.3*Math.sin(time*2), 0))
                 .times(Mat4.rotation(time / 2.5, 0 , 1, 0))
 
+            this.cow_state = Mat4.identity()
+                .times(Mat4.translation(0, 2, 0))
+
             if (true) { // For testing purposes set to false so the camera can fly around
                 let third_person = Mat4.inverse(Mat4.identity()
                     .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
@@ -233,6 +242,7 @@ export class MooBeam extends Scene {
                 Mat4.rotation(time / 300, this.player.x, this.player.y, this.player.z).times(vec4(3, 2, 10, 1)), color(1, .7, .7, 1), 10000)];
 
             this.shapes.ufo.draw(context, program_state, this.ufo_state, this.materials.ufo_material);
+            this.shapes.cow.draw(context, program_state, this.cow_state, this.materials.cow_material);
             this.shapes.sky.draw(context, program_state, this.sky_state, this.materials.skybox);
             this.shapes.floor.draw(context, program_state, this.floor_state, this.materials.floor_material);
 
