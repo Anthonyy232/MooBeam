@@ -84,8 +84,7 @@ export class MooBeam extends Scene {
         this.skyscraper_transformation = Mat4.identity()
             .times(Mat4.scale(this.skyscraper_size, this.skyscraper_height, this.skyscraper_size))
         this.skyscraper_count = 1;
-        // Generate random skyscrapers
-        this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_transformation);
+        this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_transformation); // Generate random skyscrapers
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 10 + this.starting_location.y, 20), vec3(0, this.starting_location.y, 0), vec3(0, 1 + this.starting_location.y, 0));
 
@@ -147,6 +146,23 @@ export class MooBeam extends Scene {
         } else { return false; }
     }
 
+    hasEscapedBounds() {
+        return Math.sqrt(this.player.x**2 + this.player.z**2) > this.world_size;
+    }
+
+    /*
+    animate_cow(start_time, program_time) {
+        let working_time = program_time - start_time;
+        this.stop_time;
+        if (working_time < 1500) {
+            this.cow_state = this.cow_state.times(Mat4.translation(0, working_time * 0.01, 0));
+            this.stop_time = working_time;
+        } else {
+            this.cow_state = this.cow_state.times(Mat4.translation(0, this.stop_time * 0.01, 0));
+        }
+    }
+     */
+
     make_control_panel(program_state) {
         this.key_triggered_button("Isometric View", ["Control", "0"], () => this.attached = () => null);
         this.new_line();
@@ -166,9 +182,6 @@ export class MooBeam extends Scene {
         });
         this.key_triggered_button("Reset game", ["r"], this.reset);
         this.key_triggered_button("Beam cows", ["b"], () => this.animated = "start");
-        this.key_triggered_button("Log", ["c"], () => {
-            //this.hasCollided(0)
-        });
     }
 
     reset() {
@@ -190,6 +203,9 @@ export class MooBeam extends Scene {
             this.player.velocity.z = -this.max_speed
         }
         this.player.z += this.player.velocity.z;
+        if (this.hasEscapedBounds()) {
+            this.end_game = true;
+        }
     }
 
     move_backward() {
@@ -199,6 +215,9 @@ export class MooBeam extends Scene {
             this.player.velocity.z = this.max_speed
         }
         this.player.z += this.player.velocity.z;
+        if (this.hasEscapedBounds()) {
+            this.end_game = true;
+        }
     }
 
     move_left() {
@@ -208,20 +227,10 @@ export class MooBeam extends Scene {
             this.player.velocity.x = -this.max_speed
         }
         this.player.x += this.player.velocity.x;
-    }
-
-    /*
-    animate_cow(start_time, program_time) {
-        let working_time = program_time - start_time;
-        this.stop_time;
-        if (working_time < 1500) {
-            this.cow_state = this.cow_state.times(Mat4.translation(0, working_time * 0.01, 0));
-            this.stop_time = working_time;
-        } else {
-            this.cow_state = this.cow_state.times(Mat4.translation(0, this.stop_time * 0.01, 0));
+        if (this.hasEscapedBounds()) {
+            this.end_game = true;
         }
     }
-     */
 
     move_right() {
         this.begin_game = true;
@@ -230,6 +239,9 @@ export class MooBeam extends Scene {
             this.player.velocity.x = this.max_speed
         }
         this.player.x += this.player.velocity.x;
+        if (this.hasEscapedBounds()) {
+            this.end_game = true;
+        }
     }
     display(context, program_state) {
         // Refresh the score and timer HTML elements
