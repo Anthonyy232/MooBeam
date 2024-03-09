@@ -9,7 +9,7 @@ const {
 } = tiny;
 
 const {
-    Textured_Phong, Fake_Bump_Map, Square, Cube
+    Textured_Phong, Fake_Bump_Map, Square, Cube, Rounded_Closed_Cone
 } = defs
 
 class Player {
@@ -32,6 +32,17 @@ class Skyscraper {
     }
 }
 
+class Cow {
+    constructor(transformation, x, y ,z, animate, local_time) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.transformation = transformation;
+        this.animate = false;
+        this.local_time = local_time;
+    }
+}
+
 function format_time(time) {
     let minutes_digits = Math.floor(time / 60);
     let seconds_digits = time % 60;
@@ -44,23 +55,21 @@ export class MooBeam extends Scene {
         this.shapes = {
             object: new defs.Subdivision_Sphere(4),
             ufo: new Shape_From_File("assets/Ufo.obj"),
-            //cow: new Shape_From_File("assets/cow.obj"),
-            sky: new defs.Subdivision_Sphere(5),
+            cow: new Shape_From_File("assets/cow.obj"),
+            sky: new defs.Subdivision_Sphere(4),
             floor: new Square(),
             skyscraper: new Cube(),
-            beam: new defs.Rounded_Closed_Cone(4, 10, [[0, 2], [0, 1]]),
+            beam: new Rounded_Closed_Cone(2, 20, [[0, 5], [0, 1]]),
+            shadow: new defs.Regular_2D_Polygon(2, 20)
         };
+        this.shapes.skyscraper.arrays.texture_coord.forEach(p => p.scale_by(6));
 
         this.starting_location = new Player(0, 20, 0)
-        //this.cow_start = vec3(10, 2, 0);
-        //this.local_time = 0;
-        this.movement_speed = 100;
         this.begin_game = false;
         this.end_game = false;
         this.score = 0;
         this.time = 90;
         this.show_beam = false;
-        this.animated = "false";
 
         // Decrement the time every second
         let timer = setInterval(() => {
@@ -83,28 +92,33 @@ export class MooBeam extends Scene {
         this.skyscraper_size = 10;
         this.skyscraper_transformation = Mat4.identity()
             .times(Mat4.scale(this.skyscraper_size, this.skyscraper_height, this.skyscraper_size))
-        this.skyscraper_count = 1;
-        this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_transformation); // Generate random skyscrapers
-
+        this.skyscrapers_count = 1;
+        this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_transformation);
+        this.beam_height = 10;
+        this.beam_size = 5;
+        this.cows_count = 30;
+        this.cow_size = 2;
+        this.cows_states = this.generateCows(Mat4.identity());
         this.initial_camera_location = Mat4.look_at(vec3(0, 10 + this.starting_location.y, 20), vec3(0, this.starting_location.y, 0), vec3(0, 1 + this.starting_location.y, 0));
-
         // *** Materials
         this.materials = {
-            regular: new Material(new defs.Phong_Shader(), {
-                color: hex_color("#FFFF00"), ambient: 0.3, diffusivity: 0.5, specularity: 0
+            light_material: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#FFFF00", 0.5), ambient: 0.7, diffusivity: 0.5, specularity: 0
             }),
             ufo_material: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 0.2, diffusivity: 0.5, specularity: 1,
                 texture: new Texture("assets/ufo.jpg")
             }),
-            /*
+            shadow_material: new Material(new defs.Phong_Shader(1), {
+                color: hex_color("#000000", 0.97), ambient: 0.1, diffusivity: 0, specularity: 0,
+            }),
             cow_material: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#000000"), ambient: 0.2, diffusivity: 0.5, specularity: 1,
-                texture: new Texture("assets/ufo.jpg")
-            }), */
+                color: hex_color("#000000"), ambient: 0.7, diffusivity: 0.5, specularity: 0.5,
+                texture: new Texture("assets/cow.jpg")
+            }),
             skybox: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 1, diffusivity: 0, specularity: 0,
-                texture: new Texture("assets/skybox.png")
+                texture: new Texture("assets/skybox.jpg")
             }),
             floor_material: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 0.4, diffusivity: 0.5, specularity: 0.5,
@@ -116,22 +130,37 @@ export class MooBeam extends Scene {
             })
         }
     }
-    generateSkyscrapers(skyscraper_state, num_skyscrapers = this.skyscraper_count) {
+    generateSkyscrapers(skyscraper_transformation, num_skyscrapers = this.skyscrapers_count) {
         let skyscrapers_states = [];
-        let y = 0;
         for(let i = 0; i < num_skyscrapers; i++) {
             //let x = Math.random() * 100 - 50;
             let x = 0;
             //let z = Math.random() * 100 - 50;
             let z = -20;
 
-            let skyscraper_state_transformed = skyscraper_state.times(Mat4.translation(x/this.skyscraper_size, y/this.skyscraper_size, z/this.skyscraper_size));
-            skyscrapers_states.push(new Skyscraper(skyscraper_state_transformed, x, y, z));
+            let skyscraper_transformed = skyscraper_transformation.times(Mat4.translation(x/this.skyscraper_size, 1, z/this.skyscraper_size));
+            skyscrapers_states.push(new Skyscraper(skyscraper_transformed, x, 0, z));
         }
         return skyscrapers_states;
     }
+    generateCows(cow_transformation, num_cows = this.cows_count) {
+        let cows_states = [];
+        for(let i = 0; i < num_cows; i++) {
+            let inside = true;
+            let x = 0;
+            let z = 0;
+            while (inside) {
+                x = Math.random() * 100 - 50;
+                z = Math.random() * 100 - 50;
+                if (!this.cowInSkyscraper(x, z)) { inside = false; }
+            }
+            let cow_transformed = cow_transformation.times(Mat4.translation(x, 1, z));
+            cows_states.push(new Cow(cow_transformed, x, 0, z, false));
+        }
+        return cows_states;
+    }
 
-    hasCollided(i) {
+    hasPlayerCollided(i) {
         if (this.skyscrapers_states) {
             let x_diff = Math.abs(this.skyscrapers_states[i].x - this.player.x);
             let z_diff = Math.abs(this.skyscrapers_states[i].z - this.player.z);
@@ -145,23 +174,64 @@ export class MooBeam extends Scene {
             return (distance_from_corner <= this.ufo_radius**2);
         } else { return false; }
     }
+    cowInSkyscraper(x, z) {
+        if (this.skyscrapers_states) {
+            for (let i = 0; i < this.skyscrapers_states.length; i++) {
+                let x_diff = Math.abs(this.skyscrapers_states[i].x - x);
+                let z_diff = Math.abs(this.skyscrapers_states[i].z - z);
 
-    hasEscapedBounds() {
-        return Math.sqrt(this.player.x**2 + this.player.z**2) > this.world_size;
+                // Check circle case for efficiency
+                if (x_diff > this.skyscraper_size + this.cow_size || z_diff > this.skyscraper_size + this.cow_size) { continue; }
+                // Check square case with corner
+                if (x_diff <= this.skyscraper_size || z_diff <= this.skyscraper_size) { return true; }
+
+                let distance_from_corner = (x_diff - this.skyscraper_size)**2 + (z_diff - this.skyscraper_size)**2;
+                if (distance_from_corner <= this.cow_size**2) {
+                    return true;
+                }
+            }
+            return false;
+        } else { return false; }
     }
 
-    /*
+    hasEscapedBounds() { return Math.sqrt(this.player.x**2 + this.player.z**2) > this.world_size; }
+
     animate_cow(start_time, program_time) {
         let working_time = program_time - start_time;
-        this.stop_time;
+        let stop_time;
         if (working_time < 1500) {
             this.cow_state = this.cow_state.times(Mat4.translation(0, working_time * 0.01, 0));
-            this.stop_time = working_time;
+            stop_time = working_time;
         } else {
-            this.cow_state = this.cow_state.times(Mat4.translation(0, this.stop_time * 0.01, 0));
+            this.cow_state = this.cow_state.times(Mat4.translation(0, stop_time * 0.01, 0));
         }
     }
-     */
+
+    is_animating(program_time, num_cows = this.cows_count) {
+        let animate = false;
+        if (this.cows_states) {
+            for(let i = 0; i < num_cows; i++) {
+                if (this.cows_states[i].animate) { return true; }
+                else {
+                    this.cows_states[i].local_time = program_time;
+                }
+            }
+            return false;
+        } else { return false; }
+    }
+
+    check_cow_within_shadow(num_cows = this.cows_count) {
+        let animate = false;
+        if (this.cows_states) {
+            for(let i = 0; i < num_cows; i++) {
+                if (this.cows_states[i].animate) { return true; }
+                else {
+                    this.cows_states[i].local_time = program_time;
+                }
+            }
+            return false;
+        } else { return false; }
+    }
 
     make_control_panel(program_state) {
         this.key_triggered_button("Isometric View", ["Control", "0"], () => this.attached = () => null);
@@ -181,7 +251,10 @@ export class MooBeam extends Scene {
             this.player.velocity.x = 0;
         });
         this.key_triggered_button("Reset game", ["r"], this.reset);
-        this.key_triggered_button("Beam cows", ["b"], () => this.animated = "start");
+        this.key_triggered_button("Beam cows", ["b"], () => {
+            this.show_beam = !this.show_beam
+            // check every cow if within bound then set animate for that cow to be true
+        });
     }
 
     reset() {
@@ -191,7 +264,7 @@ export class MooBeam extends Scene {
         this.time = 90;
         this.player = new Player(0, this.starting_location.y , 0);
         this.ufo_state = Mat4.identity();
-        //this.cow_state = Mat4.identity().times(Mat4.translation(this.cow_start[0], this.cow_start[1], this.cow_start[2]));
+        this.cows_states = this.generateCows(Mat4.identity());
         this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_transformation);
         this.player.velocity = {x: 30, y: 30, z: 30};
     }
@@ -263,25 +336,15 @@ export class MooBeam extends Scene {
 
             this.ufo_state = Mat4.identity()
                 .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
-                //hover animation
                 .times(Mat4.translation(0, 0.3*Math.sin(time*2), 0))
                 .times(Mat4.rotation(time / 2.5, 0 , 1, 0))
 
-            /*
-            if (this.animated === "false") {
-                this.local_time = program_state.animation_time;
-            }
-            else if (this.animated === "start") {
-                this.animated = "on";
-            }
-            else {
-            }
-             */
+            let shadow_state = Mat4.identity()
+                .times(Mat4.translation(this.player.x, 0.01, this.player.z))
+                .times(Mat4.scale(this.beam_size, this.beam_size, this.beam_size))
+                .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
 
             /*
-            this.cow_state = Mat4.identity()
-                .times(Mat4.translation(this.cow_start[0], this.cow_start[1], this.cow_start[2]))
-                //.times(Mat4.translation(10, 0,0))
 
             if ( this.player.y < this.cow_start[1] + 20 &&
                 this.player.x < this.cow_start[0] + 3 && this.player.x > this.cow_start[0] - 3 &&
@@ -290,7 +353,6 @@ export class MooBeam extends Scene {
                 this.animated = "start";
             }
              */
-
             //this.animate_cow(this.local_time, program_state.animation_time);
 
             if (true) { // For testing purposes set to false so the camera can fly around
@@ -311,26 +373,46 @@ export class MooBeam extends Scene {
             }
 
             // The parameters of the Light are: position, color, size
+            // if cow being beamed then change color to yellow
+            let light_color = this.show_beam ? color(1.0, 1.0 , 0.5, 1) : color(0.33, 0.61 , 0.50, 1)
+            let light_strength = this.show_beam ? 100000 : 700
             program_state.lights = [new Light(
-                Mat4.rotation(time / 300, this.player.x, this.player.y, this.player.z).times(vec4(3, 2, 10, 1)), color(1, .7, .7, 1), 10000)];
+                Mat4.rotation(time / 300, this.player.x, this.player.y, this.player.z).times(vec4(3, 2, 10, 1)), light_color, light_strength)];
 
             this.shapes.ufo.draw(context, program_state, this.ufo_state, this.materials.ufo_material);
             this.shapes.sky.draw(context, program_state, this.sky_state, this.materials.skybox);
             this.shapes.floor.draw(context, program_state, this.floor_state, this.materials.floor_material);
 
-            /* let beam_state = Mat4.identity()
-                .times(Mat4.scale(1, 1, 1))
-                .times(Mat4.translation(0, 10, 0)); //translate it vertically so the base is at the floor height
-            this.shapes.beam.draw(context, program_state, beam_state, this.materials.regular); */
-
-            //this.shapes.cow.draw(context, program_state, this.cow_state, this.materials.cow_material);
-
             for(let i = 0; i < this.skyscrapers_states.length; i++) {
                 this.shapes.skyscraper.draw(context, program_state, this.skyscrapers_states[i].transformation, this.materials.skyscraper_material);
-                if (this.hasCollided(i)) {
+                if (this.hasPlayerCollided(i)) {
                     this.end_game = true;
                 }
             }
+            for(let i = 0; i < this.cows_states.length; i++) {
+
+
+                this.shapes.cow.draw(context, program_state, this.cows_states[i].transformation, this.materials.cow_material);
+            }
+
+            if (this.show_beam) {
+                let beam_state = Mat4.identity()
+                    .times(Mat4.translation(this.player.x, this.player.y - this.beam_height, this.player.z))
+                    .times(Mat4.scale(this.beam_size, this.beam_height, this.beam_size))
+                    .times(Mat4.rotation(3* Math.PI / 2, 1, 0, 0));
+                this.shapes.beam.draw(context, program_state, beam_state, this.materials.light_material);
+            } else {
+                this.shapes.shadow.draw(context, program_state, shadow_state, this.materials.shadow_material);
+            }
+
+            /* Test for checking to see if drawing things at y=0.1 will look good (it does)
+            let test_state = Mat4.identity()
+                .times(Mat4.translation(0, 0.01, 0))
+                .times(Mat4.scale(5, 5, 5))
+                .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+            this.shapes.floor.draw(context, program_state, test_state, this.materials.floor_material);
+            */
+
         }
     }
 }
