@@ -45,19 +45,23 @@ export class MooBeam extends Scene {
         this.shapes = {
             object: new defs.Subdivision_Sphere(4),
             ufo: new Shape_From_File("assets/Ufo.obj"),
+            cow: new Shape_From_File("assets/cow.obj"),
             sky: new defs.Subdivision_Sphere(5),
             floor: new Square(),
             skyscraper: new Cube(),
             beam: new defs.Rounded_Closed_Cone(4, 10, [[0, 2], [0, 1]]),
         };
 
-        this.starting_location = new Player(0, 20, 0)
+        this.starting_location = new player(0, 20, 0)
+        this.cow_start = vec3(10, 2, 0);
         this.movement_speed = 100;
         this.begin_game = false;
         this.end_game = false;
         this.score = 0;
         this.time = 90;
         this.show_beam = false;
+        this.local_time = 0;
+        this.animated = "false";
 
         // Decrement the time every second
         let timer = setInterval(() => {
@@ -90,6 +94,10 @@ export class MooBeam extends Scene {
                 color: hex_color("#FFFF00"), ambient: 0.3, diffusivity: 0.5, specularity: 0
             }),
             ufo_material: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#000000"), ambient: 0.2, diffusivity: 0.5, specularity: 1,
+                texture: new Texture("assets/ufo.jpg")
+            }),
+            cow_material: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 0.2, diffusivity: 0.5, specularity: 1,
                 texture: new Texture("assets/ufo.jpg")
             }),
@@ -132,25 +140,25 @@ export class MooBeam extends Scene {
         return distance < skyscraper.size;
     }
 
-    make_control_panel() {
+    make_control_panel(program_state) {
         this.key_triggered_button("Isometric View", ["Control", "0"], () => this.attached = () => null);
         this.new_line();
         this.key_triggered_button("Behind View", ["Control", "1"], () => this.attached = () => this.object);
 
-        this.key_triggered_button("Move forward", ["w"], this.move_forward, "#6E6460", () => {
+        this.key_triggered_button("Move forward", ["i"], this.move_forward, "#6E6460", () => {
             this.player.velocity.z = 0;
         });
-        this.key_triggered_button("Move backward", ["s"], this.move_backward, "#6E6460", () => {
+        this.key_triggered_button("Move backward", ["k"], this.move_backward, "#6E6460", () => {
             this.player.velocity.z = 0;
         });
-        this.key_triggered_button("Move left", ["a"], this.move_left, "#6E6460", () => {
+        this.key_triggered_button("Move left", ["j"], this.move_left, "#6E6460", () => {
             this.player.velocity.x = 0;
         });
-        this.key_triggered_button("Move right", ["d"], this.move_right, "#6E6460", () => {
+        this.key_triggered_button("Move right", ["l"], this.move_right, "#6E6460", () => {
             this.player.velocity.x = 0;
         });
         this.key_triggered_button("Reset game", ["r"], this.reset);
-        this.key_triggered_button("Beam cows", ["b"], () => {});
+        this.key_triggered_button("Beam cows", ["b"], () => this.animated = "start");
         this.key_triggered_button("Log", ["c"], () => {
             let distance = Math.sqrt((0 - this.player.x)**2 + (-10 - this.player.z)**2);
             console.log("Player: " + this.player.x + " " + this.player.y + " " + this.player.z + " ")
@@ -166,13 +174,14 @@ export class MooBeam extends Scene {
         this.time = 90;
         this.player = new Player(0, this.starting_location.y , 0);
         this.ufo_state = Mat4.identity();
+        this.cow_state = Mat4.identity().times(Mat4.translation(this.cow_start[0], this.cow_start[1], this.cow_start[2]));
         this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_state);
-        this.player.velocity = {x: 0, y: 0, z: 0};
+        this.player.velocity = {x: 30, y: 30, z: 30};
     }
 
     move_forward() {
         this.begin_game = true;
-        this.player.velocity.z -= this.player.acceleration.z;
+        this.player.velocity.z -= 6*this.player.acceleration.z;
         if (Math.abs(this.player.velocity.z) > this.max_speed) {
             this.player.velocity.z = -this.max_speed
         }
@@ -181,7 +190,7 @@ export class MooBeam extends Scene {
 
     move_backward() {
         this.begin_game = true;
-        this.player.velocity.z += this.player.acceleration.z;
+        this.player.velocity.z += 3*this.player.acceleration.z;
         if (Math.abs(this.player.velocity.z) > this.max_speed) {
             this.player.velocity.z = this.max_speed
         }
@@ -190,28 +199,37 @@ export class MooBeam extends Scene {
 
     move_left() {
         this.begin_game = true;
-        this.player.velocity.x -= this.player.acceleration.x;
+        this.player.velocity.x -= 3*this.player.acceleration.x;
         if (Math.abs(this.player.velocity.x) > this.max_speed) {
             this.player.velocity.x = -this.max_speed
         }
         this.player.x += this.player.velocity.x;
     }
+    animate_cow(start_time, program_time) {
+        let working_time = program_time - start_time;
+        this.stop_time;
+        if (working_time < 1500) {
+            this.cow_state = this.cow_state.times(Mat4.translation(0, working_time * 0.01, 0));
+            this.stop_time = working_time;
+        } else {
+            this.cow_state = this.cow_state.times(Mat4.translation(0, this.stop_time * 0.01, 0));
+        }
+    }
 
     move_right() {
         this.begin_game = true;
-        this.player.velocity.x += this.player.acceleration.x;
+        this.player.velocity.x += 3*this.player.acceleration.x;
         if (Math.abs(this.player.velocity.x) > this.max_speed) {
             this.player.velocity.x = this.max_speed
         }
         this.player.x += this.player.velocity.x;
     }
-
-
-
     display(context, program_state) {
         // Refresh the score and timer HTML elements
         score_html.innerHTML = this.score.toString()
         time_html.innerHTML = format_time(this.time)
+
+
 
         // Display bottom control panel
         if (!context.scratchpad.controls) {
@@ -231,6 +249,30 @@ export class MooBeam extends Scene {
                 //hover animation
                 .times(Mat4.translation(0, 0.3*Math.sin(time*2), 0))
                 .times(Mat4.rotation(time / 2.5, 0 , 1, 0))
+
+            if (this.animated == "false") {
+                this.local_time = program_state.animation_time;
+            }
+            else if (this.animated == "start") {
+                this.animated = "on";
+            }
+            else {
+            }
+
+            this.cow_state = Mat4.identity()
+                .times(Mat4.translation(this.cow_start[0], this.cow_start[1], this.cow_start[2]))
+                //.times(Mat4.translation(10, 0,0))
+
+            if ( this.player.y < this.cow_start[1] + 20 &&
+                this.player.x < this.cow_start[0] + 3 && this.player.x > this.cow_start[0] - 3 &&
+                this.player.z < this.cow_start[2] + 3 && this.player.z > this.cow_start[2] - 3) {
+
+                this.animated = "start";
+            }
+            console.log(this.player);
+            console.log(this.cow_start);
+
+            this.animate_cow(this.local_time, program_state.animation_time);
 
             if (true) { // For testing purposes set to false so the camera can fly around
                 let third_person = Mat4.inverse(Mat4.identity()
@@ -254,6 +296,7 @@ export class MooBeam extends Scene {
                 Mat4.rotation(time / 300, this.player.x, this.player.y, this.player.z).times(vec4(3, 2, 10, 1)), color(1, .7, .7, 1), 10000)];
 
             this.shapes.ufo.draw(context, program_state, this.ufo_state, this.materials.ufo_material);
+            this.shapes.cow.draw(context, program_state, this.cow_state, this.materials.cow_material);
             this.shapes.sky.draw(context, program_state, this.sky_state, this.materials.skybox);
             this.shapes.floor.draw(context, program_state, this.floor_state, this.materials.floor_material);
 
