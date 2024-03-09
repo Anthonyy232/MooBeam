@@ -12,7 +12,7 @@ const {
     Textured_Phong, Fake_Bump_Map, Square, Cube
 } = defs
 
-class player {
+class Player {
     constructor(x, y, z) {
         this.x = x;
         this.y = y;
@@ -20,6 +20,16 @@ class player {
         this.velocity = {x: 0, y: 0, z: 0};
         this.acceleration = {x: 0.01, y: 0, z: 0.01};
         this.max_speed = 0.1;
+    }
+}
+
+class Skyscraper {
+    constructor(transformation, size, x, y ,z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.transformation = transformation;
+        this.size = size;
     }
 }
 
@@ -38,13 +48,13 @@ export class MooBeam extends Scene {
             cow: new Shape_From_File("assets/cow.obj"),
             sky: new defs.Subdivision_Sphere(5),
             floor: new Square(),
-            skyscraper: new Cube()
+            skyscraper: new Cube(),
+            beam: new defs.Rounded_Closed_Cone(4, 10, [[0, 2], [0, 1]]),
         };
 
         this.starting_location = new player(0, 20, 0)
         this.cow_start = vec3(10, 2, 0);
         this.movement_speed = 100;
-        this.collided = false;
         this.begin_game = false;
         this.end_game = false;
         this.score = 0;
@@ -68,21 +78,20 @@ export class MooBeam extends Scene {
         this.world_size = 200;
         this.sky_state = Mat4.identity().times(Mat4.scale(this.world_size, this.world_size, this.world_size));
         this.floor_state = Mat4.identity().times(Mat4.scale(this.world_size, this.world_size, this.world_size)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
-        this.player = new player(0, this.starting_location.y , 0);
+        this.player = new Player(0, this.starting_location.y , 0);
         this.ufo_state = Mat4.identity();
-        this.skyscrapper_height = 25;
-        this.skyscrapper_size = 10;
+        this.skyscraper_height = 25;
+        this.skyscraper_size = 10;
         this.skyscraper_state = Mat4.identity()
-            .times(Mat4.scale(this.skyscrapper_size, this.skyscrapper_height, this.skyscrapper_size))
-            .times(Mat4.translation(0, 1, 0)); //translate it vertically so the base is at the floor height
-        this.skyscrapper_count = 30;
+            .times(Mat4.scale(this.skyscraper_size, this.skyscraper_height, this.skyscraper_size))
+        this.skyscraper_count = 1;
 
 
 
         // *** Materials
         this.materials = {
             regular: new Material(new defs.Phong_Shader(), {
-                color: hex_color("#000000"), ambient: 0.2, diffusivity: 0.5, specularity: 1
+                color: hex_color("#FFFF00"), ambient: 0.3, diffusivity: 0.5, specularity: 0
             }),
             ufo_material: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 0.2, diffusivity: 0.5, specularity: 1,
@@ -102,7 +111,7 @@ export class MooBeam extends Scene {
             }),
             skyscraper_material: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 0.6, diffusivity: 0.5, specularity: 1,
-                texture: new Texture("assets/skyscrapper.png")
+                texture: new Texture("assets/skyscraper.png")
             })
         }
         this.initial_camera_location = Mat4.look_at(vec3(0, 10 + this.starting_location.y, 20), vec3(0, this.starting_location.y, 0), vec3(0, 1 + this.starting_location.y, 0));
@@ -111,17 +120,24 @@ export class MooBeam extends Scene {
         // Generate random skyscrapers
         this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_state);
     }
-
-    generateSkyscrapers(skyscraper_state, num_skyscrapers = this.skyscrapper_count) {
+    generateSkyscrapers(skyscraper_state, num_skyscrapers = this.skyscraper_count) {
         let skyscrapers_states = [];
+        let y = 0;
         for(let i = 0; i < num_skyscrapers; i++) {
-            let x = Math.random() * 100 - 50;
-            let z = Math.random() * 100 - 50;
+            //let x = Math.random() * 100 - 50;
+            let x = 0;
+            //let z = Math.random() * 100 - 50;
+            let z = -10;
 
-            let skyscraper_state_transformed = skyscraper_state.times(Mat4.translation(x, 0, z));
-            skyscrapers_states.push(skyscraper_state_transformed);
+            let skyscraper_state_transformed = skyscraper_state.times(Mat4.translation(x/this.skyscraper_size, y/this.skyscraper_size, z/this.skyscraper_size));
+            skyscrapers_states.push(new Skyscraper(skyscraper_state_transformed, this.skyscraper_size, x, y, z));
         }
         return skyscrapers_states;
+    }
+
+    hasCollided(skyscraper, x, y, z) {
+        let distance = Math.sqrt((skyscraper.x - x)**2 + (skyscraper.z - z)**2);
+        return distance < skyscraper.size;
     }
 
     make_control_panel(program_state) {
@@ -143,7 +159,11 @@ export class MooBeam extends Scene {
         });
         this.key_triggered_button("Reset game", ["r"], this.reset);
         this.key_triggered_button("Beam cows", ["b"], () => this.animated = "start");
-
+        this.key_triggered_button("Log", ["c"], () => {
+            let distance = Math.sqrt((0 - this.player.x)**2 + (-10 - this.player.z)**2);
+            console.log("Player: " + this.player.x + " " + this.player.y + " " + this.player.z + " ")
+            console.log("Distance: " + distance)
+        });
     }
 
     reset() {
@@ -152,7 +172,7 @@ export class MooBeam extends Scene {
         this.end_game = false;
         this.score = 0;
         this.time = 90;
-        this.player = new player(0, this.starting_location.y , 0);
+        this.player = new Player(0, this.starting_location.y , 0);
         this.ufo_state = Mat4.identity();
         this.cow_state = Mat4.identity().times(Mat4.translation(this.cow_start[0], this.cow_start[1], this.cow_start[2]));
         this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_state);
@@ -280,8 +300,18 @@ export class MooBeam extends Scene {
             this.shapes.sky.draw(context, program_state, this.sky_state, this.materials.skybox);
             this.shapes.floor.draw(context, program_state, this.floor_state, this.materials.floor_material);
 
+            /* let beam_state = Mat4.identity()
+                .times(Mat4.scale(1, 1, 1))
+                .times(Mat4.translation(0, 10, 0)); //translate it vertically so the base is at the floor height
+            this.shapes.beam.draw(context, program_state, beam_state, this.materials.regular); */
+
             for(let i = 0; i < this.skyscrapers_states.length; i++) {
-                this.shapes.skyscraper.draw(context, program_state, this.skyscrapers_states[i], this.materials.skyscraper_material);
+                this.shapes.skyscraper.draw(context, program_state, this.skyscrapers_states[i].transformation, this.materials.skyscraper_material);
+                console.log("Building: " + this.skyscrapers_states[i].x + " " + this.skyscrapers_states[i].y + " " + this.skyscrapers_states[i].z + " ")
+                if (this.hasCollided(this.skyscrapers_states[i], this.player)) {
+                    this.end_game = true;
+                    console.log("ggs")
+                }
             }
         }
     }
