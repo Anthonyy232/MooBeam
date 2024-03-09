@@ -134,10 +134,16 @@ export class MooBeam extends Scene {
 
     hasCollided(i) {
         if (this.skyscrapers_states) {
-            let distance = Math.sqrt((this.skyscrapers_states[i].x - this.player.x)**2 + (this.skyscrapers_states[i].z - this.player.z)**2);
-            console.log('Distance: ', distance);
-            console.log('Collide: ', distance < this.skyscraper_size);
-            return (distance < this.skyscraper_size + this.ufo_radius); //add radius of ufo
+            let x_diff = Math.abs(this.skyscrapers_states[i].x - this.player.x);
+            let z_diff = Math.abs(this.skyscrapers_states[i].z - this.player.z);
+
+            // Check circle case for efficiency
+            if (x_diff > this.skyscraper_size + this.ufo_radius || z_diff > this.skyscraper_size + this.ufo_radius) { return false; }
+            // Check square case with corner
+            if (x_diff <= this.skyscraper_size || z_diff <= this.skyscraper_size) { return true; }
+
+            let distance_from_corner = (x_diff - this.skyscraper_size)**2 + (z_diff - this.skyscraper_size)**2;
+            return (distance_from_corner <= this.ufo_radius**2);
         } else { return false; }
     }
 
