@@ -76,6 +76,7 @@ export class MooBeam extends Scene {
 
 
 
+
         // *** Materials
         this.materials = {
             regular: new Material(new defs.Phong_Shader(), {
@@ -138,6 +139,13 @@ export class MooBeam extends Scene {
         this.key_triggered_button("Beam cows", ["b"], () => {});
         this.key_triggered_button("Turn left", ["n"], this.turn_left, "#6E6460");
         this.key_triggered_button("Turn right", ["m"], this.turn_right, "#6E6460");
+        this.key_triggered_button("Log", ["c"], () => {
+            console.log(this.camera_angle);
+            let x_comp = Math.cos(this.camera_angle);
+            let z_comp = Math.sin(this.camera_angle);
+            console.log(x_comp);
+            console.log(z_comp);
+        });
     }
 
     reset() {
@@ -154,38 +162,59 @@ export class MooBeam extends Scene {
 
     move_forward() {
         this.begin_game = true;
+
+        let x_comp = Math.cos(this.camera_angle);
+        let z_comp = Math.sin(this.camera_angle);
+
         this.player.velocity.z -= this.player.acceleration.z;
+        this.player.velocity.x -= this.player.acceleration.x;
         if (Math.abs(this.player.velocity.z) > this.max_speed) {
-            this.player.velocity.z = -this.max_speed
+            this.player.velocity.z = -this.max_speed;
         }
-        this.player.z += this.player.velocity.z;
+        this.player.z += this.player.velocity.z * x_comp;
+        this.player.x += this.player.velocity.z * z_comp;
     }
 
     move_backward() {
         this.begin_game = true;
+
+        let x_comp = Math.cos(this.camera_angle);
+        let z_comp = Math.sin(this.camera_angle);
+
         this.player.velocity.z += this.player.acceleration.z;
         if (Math.abs(this.player.velocity.z) > this.max_speed) {
             this.player.velocity.z = this.max_speed
         }
-        this.player.z += this.player.velocity.z;
+        this.player.z += this.player.velocity.z * x_comp;
+        this.player.x += this.player.velocity.z * z_comp;
     }
 
     move_left() {
         this.begin_game = true;
+
+        let x_comp = Math.cos(this.camera_angle);
+        let z_comp = Math.sin(this.camera_angle);
+
         this.player.velocity.x -= this.player.acceleration.x;
         if (Math.abs(this.player.velocity.x) > this.max_speed) {
             this.player.velocity.x = -this.max_speed
         }
-        this.player.x += this.player.velocity.x;
+        this.player.x += this.player.velocity.x * x_comp;
+        this.player.z -= this.player.velocity.x * z_comp;
     }
 
     move_right() {
         this.begin_game = true;
+
+        let x_comp = Math.cos(this.camera_angle);
+        let z_comp = Math.sin(this.camera_angle);
+
         this.player.velocity.x += this.player.acceleration.x;
         if (Math.abs(this.player.velocity.x) > this.max_speed) {
             this.player.velocity.x = this.max_speed
         }
-        this.player.x += this.player.velocity.x;
+        this.player.x += this.player.velocity.x * x_comp;
+        this.player.z -= this.player.velocity.x * z_comp;
     }
 
     turn_left() {
