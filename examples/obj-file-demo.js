@@ -109,7 +109,7 @@ export class Obj_File_Demo extends Scene {                           // **Obj_Fi
                                                                      // can just be thought of as placeholders until you find a model file
                                                                      // that fits well.  This demo shows the teapot model twice, with one
                                                                      // teapot showing off the Fake_Bump_Map effect while the other has a
-                                                                     // regular texture and Phong lighting.
+                                                                     // light_material texture and Phong lighting.
     constructor() {
         super();
         // Load the model file:
@@ -134,7 +134,7 @@ export class Obj_File_Demo extends Scene {                           // **Obj_Fi
 
         program_state.set_camera(Mat4.translation(0, 0, -5));    // Locate the camera here (inverted matrix).
         program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 1, 500);
-        // A spinning light to show off the bump map:
+        // A spinning light_material to show off the bump map:
         program_state.lights = [new Light(
             Mat4.rotation(t / 300, 1, 0, 0).times(vec4(3, 2, 10, 1)),
             color(1, .7, .7, 1), 100000)];

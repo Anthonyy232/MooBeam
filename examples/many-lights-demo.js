@@ -32,8 +32,8 @@ export class Many_Lights_Demo extends Scene {                             // **M
             for (let column = 0; column < this.columns; column++)
                 this.box_positions.push(vec3(row, -2 - 2 * Math.random(), -column).randomized(1));
 
-        // The lights lists will function as a lookup table for the light in a current row and column:
-        // Make initial light positions.  One light per row, and one light per column:
+        // The lights lists will function as a lookup table for the light_material in a current row and column:
+        // Make initial light_material positions.  One light_material per row, and one light_material per column:
         for (let c = 0; c < this.columns; c++)
             this.row_lights    [~~(-c)] = vec3(2 * Math.random() * this.rows, -Math.random(), -c);
         for (let r = 0; r < this.rows; r++)

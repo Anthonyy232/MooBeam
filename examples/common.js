@@ -23,7 +23,7 @@ const Triangle = defs.Triangle =
             this.arrays.position = [vec3(0, 0, 0), vec3(1, 0, 0), vec3(0, 1, 0)];
             // Next, supply vectors that point away from the triangle face.  They should match up with
             // the points in the above list.  Normal vectors are needed so the graphics engine can
-            // know if the shape is pointed at light or not, and color it accordingly.
+            // know if the shape is pointed at light_material or not, and color it accordingly.
             this.arrays.normal = [vec3(0, 0, 1), vec3(0, 0, 1), vec3(0, 0, 1)];
             //  lastly, put each point somewhere in texture space too:
             this.arrays.texture_coord = [Vector.of(0, 0), Vector.of(1, 0), Vector.of(0, 1)];
@@ -375,7 +375,7 @@ const Grid_Sphere = defs.Grid_Sphere =
 
 const Closed_Cone = defs.Closed_Cone =
     class Closed_Cone extends Shape {
-        // Combine a cone tip and a regular polygon to make a closed cone.
+        // Combine a cone tip and a light_material polygon to make a closed cone.
         constructor(rows, columns, texture_range) {
             super("position", "normal", "texture_coord");
             Cone_Tip.insert_transformed_copy_into(this, [rows, columns, texture_range]);
@@ -394,7 +394,7 @@ const Rounded_Closed_Cone = defs.Rounded_Closed_Cone =
 
 const Capped_Cylinder = defs.Capped_Cylinder =
     class Capped_Cylinder extends Shape {
-        // Combine a tube and two regular polygons to make a closed cylinder.
+        // Combine a tube and two light_material polygons to make a closed cylinder.
         constructor(rows, columns, texture_range) {
             // Flat shade this to make a prism, where #columns = #sides.
             super("position", "normal", "texture_coord");
@@ -573,7 +573,7 @@ const Phong_Shader = defs.Phong_Shader =
         // Graphic cards prior to year 2000 had shaders like this one hard-coded into them
         // instead of customizable shaders.  "Phong-Blinn" Shading here is a process of
         // determining brightness of pixels via vector math.  It compares the normal vector
-        // at that pixel with the vectors toward the camera and light sources.
+        // at that pixel with the vectors toward the camera and light_material sources.
 
 
         constructor(num_lights = 2) {
@@ -878,7 +878,7 @@ const Movement_Controls = defs.Movement_Controls =
             this.new_line();
             this.new_line();
 
-            /*
+
             this.key_triggered_button("Up", [" "], () => this.thrust[1] = -1, undefined, () => this.thrust[1] = 0);
             this.key_triggered_button("Forward", ["w"], () => this.thrust[2] = 1, undefined, () => this.thrust[2] = 0);
             this.new_line();
@@ -887,7 +887,7 @@ const Movement_Controls = defs.Movement_Controls =
             this.key_triggered_button("Right", ["d"], () => this.thrust[0] = -1, undefined, () => this.thrust[0] = 0);
             this.new_line();
             this.key_triggered_button("Down", ["z"], () => this.thrust[1] = 1, undefined, () => this.thrust[1] = 0);
-             */
+
 
             const speed_controls = this.control_panel.appendChild(document.createElement("span"));
             speed_controls.style.margin = "30px";
