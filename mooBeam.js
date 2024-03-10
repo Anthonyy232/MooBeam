@@ -90,6 +90,14 @@ export class MooBeam extends Scene {
         this.floor_state = Mat4.identity().times(Mat4.scale(this.world_size, this.world_size, this.world_size)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
         this.player = new Player(0, this.starting_location.y , 0);
         this.ufo_state = Mat4.identity();
+        this.skyscrapper_height = 25;
+        this.skyscrapper_size = 10;
+        this.skyscraper_state = Mat4.identity()
+            .times(Mat4.scale(this.skyscrapper_size, this.skyscrapper_height, this.skyscrapper_size))
+            .times(Mat4.translation(0, 1, 0)); //translate it vertically so the base is at the floor height
+        this.skyscrapper_count = 30;
+        this.camera_angle = 0;
+
         this.ufo_radius = 2;
         this.skyscraper_height = 25;
         this.skyscraper_size = 10;
@@ -97,12 +105,14 @@ export class MooBeam extends Scene {
             .times(Mat4.scale(this.skyscraper_size, this.skyscraper_height, this.skyscraper_size))
         this.skyscrapers_count = 1;
         this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_transformation);
+        this.camera_angle = 0;
         this.beam_height = 10;
         this.beam_size = 5;
         this.cows_count = 30;
         this.cow_size = 2;
         this.cows_states = this.generateCows(Mat4.identity());
         this.initial_camera_location = Mat4.look_at(vec3(0, 10 + this.starting_location.y, 20), vec3(0, this.starting_location.y, 0), vec3(0, 1 + this.starting_location.y, 0));
+      
         // *** Materials
         this.materials = {
             light_material: new Material(new defs.Fake_Bump_Map(1), {
@@ -258,6 +268,14 @@ export class MooBeam extends Scene {
                 this.check_cow_within_shadow()
             }
         });
+        this.key_triggered_button("Turn left", ["n"], this.turn_left, "#6E6460");
+        this.key_triggered_button("Turn right", ["m"], this.turn_right, "#6E6460");
+        this.key_triggered_button("Log", ["c"], () => {
+            console.log(this.camera_angle);
+            let x_comp = Math.cos(this.camera_angle);
+            let z_comp = Math.sin(this.camera_angle);
+            console.log(x_comp);
+            console.log(z_comp);
     }
 
     reset() {
@@ -275,11 +293,15 @@ export class MooBeam extends Scene {
     move_forward() {
         this.begin_game = true;
         if (!this.beaming) {
-            this.player.velocity.z -= 6*this.player.acceleration.z;
+            let x_comp = Math.cos(this.camera_angle);
+            let z_comp = Math.sin(this.camera_angle);
+            this.player.velocity.z -= this.player.acceleration.z;
+            this.player.velocity.x -= this.player.acceleration.x;
             if (Math.abs(this.player.velocity.z) > this.max_speed) {
-                this.player.velocity.z = -this.max_speed
+                this.player.velocity.z = -this.max_speed;
             }
-            this.player.z += this.player.velocity.z;
+            this.player.z += this.player.velocity.z * x_comp;
+            this.player.x += this.player.velocity.z * z_comp;
             if (this.hasEscapedBounds()) {
                 this.end_game = true;
             }
@@ -289,11 +311,14 @@ export class MooBeam extends Scene {
     move_backward() {
         this.begin_game = true;
         if (!this.beaming) {
-            this.player.velocity.z += 3 * this.player.acceleration.z;
+            let x_comp = Math.cos(this.camera_angle);
+            let z_comp = Math.sin(this.camera_angle);
+            this.player.velocity.z += this.player.acceleration.z;
             if (Math.abs(this.player.velocity.z) > this.max_speed) {
                 this.player.velocity.z = this.max_speed
             }
-            this.player.z += this.player.velocity.z;
+            this.player.z += this.player.velocity.z * x_comp;
+            this.player.x += this.player.velocity.z * z_comp;
             if (this.hasEscapedBounds()) {
                 this.end_game = true;
             }
@@ -303,11 +328,15 @@ export class MooBeam extends Scene {
     move_left() {
         this.begin_game = true;
         if (!this.beaming) {
-            this.player.velocity.x -= 3 * this.player.acceleration.x;
+            let x_comp = Math.cos(this.camera_angle);
+            let z_comp = Math.sin(this.camera_angle);
+
+            this.player.velocity.x -= this.player.acceleration.x;
             if (Math.abs(this.player.velocity.x) > this.max_speed) {
                 this.player.velocity.x = -this.max_speed
             }
-            this.player.x += this.player.velocity.x;
+            this.player.x += this.player.velocity.x * x_comp;
+            this.player.z -= this.player.velocity.x * z_comp;
             if (this.hasEscapedBounds()) {
                 this.end_game = true;
             }
@@ -317,15 +346,29 @@ export class MooBeam extends Scene {
     move_right() {
         this.begin_game = true;
         if (!this.beaming) {
-            this.player.velocity.x += 3 * this.player.acceleration.x;
+            let x_comp = Math.cos(this.camera_angle);
+            let z_comp = Math.sin(this.camera_angle);
+
+            this.player.velocity.x += this.player.acceleration.x;
             if (Math.abs(this.player.velocity.x) > this.max_speed) {
                 this.player.velocity.x = this.max_speed
             }
-            this.player.x += this.player.velocity.x;
+            this.player.x += this.player.velocity.x * x_comp;
+            this.player.z -= this.player.velocity.x * z_comp;
             if (this.hasEscapedBounds()) {
                 this.end_game = true;
             }
         }
+    }
+
+    turn_left() {
+        this.camera_angle -= Math.PI / 36;
+    }
+
+    turn_right() {
+        this.camera_angle += Math.PI / 36;
+    }
+        
     }
     display(context, program_state) {
         // Refresh the score and timer HTML elements
@@ -358,6 +401,7 @@ export class MooBeam extends Scene {
             if (true) { // For testing purposes set to false so the camera can fly around
                 let third_person = Mat4.inverse(Mat4.identity()
                     .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
+                    .times(Mat4.rotation(this.camera_angle, 0, 1, 0))
                     .times(Mat4.translation(0,5,13))
                     .times(Mat4.rotation(-Math.PI / 8, 1, 0, 0 ))
                 )
