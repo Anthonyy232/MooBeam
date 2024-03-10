@@ -18,8 +18,8 @@ class Player {
         this.y = y;
         this.z = z;
         this.velocity = {x: 0, y: 0, z: 0};
-        this.acceleration = {x: 0.01, y: 0, z: 0.01};
-        this.max_speed = 0.1;
+        this.acceleration = {x: 0.03, y: 0, z: 0.03};
+        this.max_speed = 0.75;
     }
 }
 
@@ -268,14 +268,8 @@ export class MooBeam extends Scene {
                 this.check_cow_within_shadow()
             }
         });
-        this.key_triggered_button("Turn left", ["n"], this.turn_left, "#6E6460");
-        this.key_triggered_button("Turn right", ["m"], this.turn_right, "#6E6460");
-        this.key_triggered_button("Log", ["c"], () => {
-            console.log(this.camera_angle);
-            let x_comp = Math.cos(this.camera_angle);
-            let z_comp = Math.sin(this.camera_angle);
-            console.log(x_comp);
-            console.log(z_comp);
+        this.key_triggered_button("Turn left", [","], this.turn_left, "#6E6460");
+        this.key_triggered_button("Turn right", ["."], this.turn_right, "#6E6460");
     }
 
     reset() {
@@ -297,8 +291,8 @@ export class MooBeam extends Scene {
             let z_comp = Math.sin(this.camera_angle);
             this.player.velocity.z -= this.player.acceleration.z;
             this.player.velocity.x -= this.player.acceleration.x;
-            if (Math.abs(this.player.velocity.z) > this.max_speed) {
-                this.player.velocity.z = -this.max_speed;
+            if (Math.abs(this.player.velocity.z) > this.player.max_speed) {
+                this.player.velocity.z = -this.player.max_speed;
             }
             this.player.z += this.player.velocity.z * x_comp;
             this.player.x += this.player.velocity.z * z_comp;
@@ -314,8 +308,8 @@ export class MooBeam extends Scene {
             let x_comp = Math.cos(this.camera_angle);
             let z_comp = Math.sin(this.camera_angle);
             this.player.velocity.z += this.player.acceleration.z;
-            if (Math.abs(this.player.velocity.z) > this.max_speed) {
-                this.player.velocity.z = this.max_speed
+            if (Math.abs(this.player.velocity.z) > this.player.max_speed) {
+                this.player.velocity.z = this.player.max_speed
             }
             this.player.z += this.player.velocity.z * x_comp;
             this.player.x += this.player.velocity.z * z_comp;
@@ -332,8 +326,8 @@ export class MooBeam extends Scene {
             let z_comp = Math.sin(this.camera_angle);
 
             this.player.velocity.x -= this.player.acceleration.x;
-            if (Math.abs(this.player.velocity.x) > this.max_speed) {
-                this.player.velocity.x = -this.max_speed
+            if (Math.abs(this.player.velocity.x) > this.player.max_speed) {
+                this.player.velocity.x = -this.player.max_speed
             }
             this.player.x += this.player.velocity.x * x_comp;
             this.player.z -= this.player.velocity.x * z_comp;
@@ -350,8 +344,8 @@ export class MooBeam extends Scene {
             let z_comp = Math.sin(this.camera_angle);
 
             this.player.velocity.x += this.player.acceleration.x;
-            if (Math.abs(this.player.velocity.x) > this.max_speed) {
-                this.player.velocity.x = this.max_speed
+            if (Math.abs(this.player.velocity.x) > this.player.max_speed) {
+                this.player.velocity.x = this.player.max_speed
             }
             this.player.x += this.player.velocity.x * x_comp;
             this.player.z -= this.player.velocity.x * z_comp;
@@ -362,14 +356,13 @@ export class MooBeam extends Scene {
     }
 
     turn_left() {
-        this.camera_angle -= Math.PI / 36;
+        this.camera_angle += Math.PI / 36;
     }
 
     turn_right() {
-        this.camera_angle += Math.PI / 36;
+        this.camera_angle -= Math.PI / 36;
     }
-        
-    }
+
     display(context, program_state) {
         // Refresh the score and timer HTML elements
         score_html.innerHTML = this.score.toString()
@@ -421,7 +414,6 @@ export class MooBeam extends Scene {
             let light_strength = this.show_beam ? 100000 : 700
             program_state.lights = [new Light(
                 Mat4.rotation(time / 300, this.player.x, this.player.y, this.player.z).times(vec4(3, 2, 10, 1)), light_color, light_strength)];
-
 
             this.shapes.ufo.draw(context, program_state, this.ufo_state, this.materials.ufo_material);
             this.shapes.sky.draw(context, program_state, this.sky_state, this.materials.skybox);
