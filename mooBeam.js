@@ -38,7 +38,7 @@ class Cow {
         this.y = y;
         this.z = z;
         this.transformation = transformation;
-        this.animate = false;
+        this.animate = animate;
         this.local_time = local_time;
     }
 }
@@ -55,7 +55,8 @@ export class MooBeam extends Scene {
         this.shapes = {
             object: new defs.Subdivision_Sphere(4),
             ufo: new Shape_From_File("assets/Ufo.obj"),
-            cow: new Shape_From_File("assets/cow.obj"),
+            cow: new defs.Subdivision_Sphere(4),
+            //cow: new Shape_From_File("assets/cow.obj"),
             sky: new defs.Subdivision_Sphere(4),
             floor: new Square(),
             skyscraper: new Cube(),
@@ -70,6 +71,7 @@ export class MooBeam extends Scene {
         this.score = 0;
         this.time = 90;
         this.show_beam = false;
+        this.beaming = false;
 
         // Decrement the time every second
         let timer = setInterval(() => {
@@ -80,6 +82,7 @@ export class MooBeam extends Scene {
                 this.time = 0;
             }
         }, 1000);
+
 
 
         this.world_size = 200;
@@ -155,7 +158,7 @@ export class MooBeam extends Scene {
                 if (!this.cowInSkyscraper(x, z)) { inside = false; }
             }
             let cow_transformed = cow_transformation.times(Mat4.translation(x, 1, z));
-            cows_states.push(new Cow(cow_transformed, x, 0, z, false));
+            cows_states.push(new Cow(cow_transformed, x, 0, z, false, 0));
         }
         return cows_states;
     }
@@ -175,6 +178,7 @@ export class MooBeam extends Scene {
         } else { return false; }
     }
     cowInSkyscraper(x, z) {
+        //Slightly inaccurate, range is smaller than expected
         if (this.skyscrapers_states) {
             for (let i = 0; i < this.skyscrapers_states.length; i++) {
                 let x_diff = Math.abs(this.skyscrapers_states[i].x - x);
@@ -186,7 +190,7 @@ export class MooBeam extends Scene {
                 if (x_diff <= this.skyscraper_size || z_diff <= this.skyscraper_size) { return true; }
 
                 let distance_from_corner = (x_diff - this.skyscraper_size)**2 + (z_diff - this.skyscraper_size)**2;
-                if (distance_from_corner <= this.cow_size**2) {
+                if (distance_from_corner <= this.cow_size + this.beam_size) {
                     return true;
                 }
             }
@@ -196,41 +200,38 @@ export class MooBeam extends Scene {
 
     hasEscapedBounds() { return Math.sqrt(this.player.x**2 + this.player.z**2) > this.world_size; }
 
-    animate_cow(start_time, program_time) {
-        let working_time = program_time - start_time;
-        let stop_time;
-        if (working_time < 1500) {
-            this.cow_state = this.cow_state.times(Mat4.translation(0, working_time * 0.01, 0));
-            stop_time = working_time;
-        } else {
-            this.cow_state = this.cow_state.times(Mat4.translation(0, stop_time * 0.01, 0));
+    animate_cow(i, program_time) {
+        //NEED TO DELETE COW FROM LIST ONCE IT SUCKS ONE UP, AND THEN GENERATE ANOTHER ONE
+        //CHANGE SETTING TRANSFORMATION TO SETTING POSITION XZ this.cows_states[i].local_time
+        let working_time = Math.min(program_time - this.cows_states[i].local_time, 1500);
+        this.cows_states[i].transformation = this.cows_states[i].transformation.times(Mat4.translation(0, working_time * 0.01, 0));
+        this.cows_states[i].y = this.cows_states[i].y + (working_time * 0.01)
+    }
+
+    is_animating(program_time) {
+        let cows_animating = [];
+        if (this.cows_states) {
+            for (let i = 0; i < this.cows_states.length; i++) {
+                if (this.cows_states[i].animate) {
+                    cows_animating.push(i)
+                }
+                else {
+                    this.cows_states[i].local_time = program_time;
+                }
+            }
         }
+        return cows_animating;
     }
 
-    is_animating(program_time, num_cows = this.cows_count) {
-        let animate = false;
+    check_cow_within_shadow() {
         if (this.cows_states) {
-            for(let i = 0; i < num_cows; i++) {
-                if (this.cows_states[i].animate) { return true; }
-                else {
-                    this.cows_states[i].local_time = program_time;
+            for (let i = 0; i < this.cows_states.length; i++) {
+                let distance = (this.player.x - this.cows_states[i].x)**2 + (this.player.z - this.cows_states[i].z)**2
+                if (distance <= this.cow_size + this.beam_size) {
+                    this.cows_states[i].animate = true;
                 }
             }
-            return false;
-        } else { return false; }
-    }
-
-    check_cow_within_shadow(num_cows = this.cows_count) {
-        let animate = false;
-        if (this.cows_states) {
-            for(let i = 0; i < num_cows; i++) {
-                if (this.cows_states[i].animate) { return true; }
-                else {
-                    this.cows_states[i].local_time = program_time;
-                }
-            }
-            return false;
-        } else { return false; }
+        }
     }
 
     make_control_panel(program_state) {
@@ -252,8 +253,10 @@ export class MooBeam extends Scene {
         });
         this.key_triggered_button("Reset game", ["r"], this.reset);
         this.key_triggered_button("Beam cows", ["b"], () => {
-            this.show_beam = !this.show_beam
-            // check every cow if within bound then set animate for that cow to be true
+            if (!this.beaming) {
+                this.show_beam = true;
+                this.check_cow_within_shadow()
+            }
         });
     }
 
@@ -271,49 +274,57 @@ export class MooBeam extends Scene {
 
     move_forward() {
         this.begin_game = true;
-        this.player.velocity.z -= 6*this.player.acceleration.z;
-        if (Math.abs(this.player.velocity.z) > this.max_speed) {
-            this.player.velocity.z = -this.max_speed
-        }
-        this.player.z += this.player.velocity.z;
-        if (this.hasEscapedBounds()) {
-            this.end_game = true;
+        if (!this.beaming) {
+            this.player.velocity.z -= 6*this.player.acceleration.z;
+            if (Math.abs(this.player.velocity.z) > this.max_speed) {
+                this.player.velocity.z = -this.max_speed
+            }
+            this.player.z += this.player.velocity.z;
+            if (this.hasEscapedBounds()) {
+                this.end_game = true;
+            }
         }
     }
 
     move_backward() {
         this.begin_game = true;
-        this.player.velocity.z += 3*this.player.acceleration.z;
-        if (Math.abs(this.player.velocity.z) > this.max_speed) {
-            this.player.velocity.z = this.max_speed
-        }
-        this.player.z += this.player.velocity.z;
-        if (this.hasEscapedBounds()) {
-            this.end_game = true;
+        if (!this.beaming) {
+            this.player.velocity.z += 3 * this.player.acceleration.z;
+            if (Math.abs(this.player.velocity.z) > this.max_speed) {
+                this.player.velocity.z = this.max_speed
+            }
+            this.player.z += this.player.velocity.z;
+            if (this.hasEscapedBounds()) {
+                this.end_game = true;
+            }
         }
     }
 
     move_left() {
         this.begin_game = true;
-        this.player.velocity.x -= 3*this.player.acceleration.x;
-        if (Math.abs(this.player.velocity.x) > this.max_speed) {
-            this.player.velocity.x = -this.max_speed
-        }
-        this.player.x += this.player.velocity.x;
-        if (this.hasEscapedBounds()) {
-            this.end_game = true;
+        if (!this.beaming) {
+            this.player.velocity.x -= 3 * this.player.acceleration.x;
+            if (Math.abs(this.player.velocity.x) > this.max_speed) {
+                this.player.velocity.x = -this.max_speed
+            }
+            this.player.x += this.player.velocity.x;
+            if (this.hasEscapedBounds()) {
+                this.end_game = true;
+            }
         }
     }
 
     move_right() {
         this.begin_game = true;
-        this.player.velocity.x += 3*this.player.acceleration.x;
-        if (Math.abs(this.player.velocity.x) > this.max_speed) {
-            this.player.velocity.x = this.max_speed
-        }
-        this.player.x += this.player.velocity.x;
-        if (this.hasEscapedBounds()) {
-            this.end_game = true;
+        if (!this.beaming) {
+            this.player.velocity.x += 3 * this.player.acceleration.x;
+            if (Math.abs(this.player.velocity.x) > this.max_speed) {
+                this.player.velocity.x = this.max_speed
+            }
+            this.player.x += this.player.velocity.x;
+            if (this.hasEscapedBounds()) {
+                this.end_game = true;
+            }
         }
     }
     display(context, program_state) {
@@ -344,17 +355,6 @@ export class MooBeam extends Scene {
                 .times(Mat4.scale(this.beam_size, this.beam_size, this.beam_size))
                 .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
 
-            /*
-
-            if ( this.player.y < this.cow_start[1] + 20 &&
-                this.player.x < this.cow_start[0] + 3 && this.player.x > this.cow_start[0] - 3 &&
-                this.player.z < this.cow_start[2] + 3 && this.player.z > this.cow_start[2] - 3) {
-
-                this.animated = "start";
-            }
-             */
-            //this.animate_cow(this.local_time, program_state.animation_time);
-
             if (true) { // For testing purposes set to false so the camera can fly around
                 let third_person = Mat4.inverse(Mat4.identity()
                     .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
@@ -373,28 +373,42 @@ export class MooBeam extends Scene {
             }
 
             // The parameters of the Light are: position, color, size
-            // if cow being beamed then change color to yellow
             let light_color = this.show_beam ? color(1.0, 1.0 , 0.5, 1) : color(0.33, 0.61 , 0.50, 1)
             let light_strength = this.show_beam ? 100000 : 700
             program_state.lights = [new Light(
                 Mat4.rotation(time / 300, this.player.x, this.player.y, this.player.z).times(vec4(3, 2, 10, 1)), light_color, light_strength)];
 
+
             this.shapes.ufo.draw(context, program_state, this.ufo_state, this.materials.ufo_material);
             this.shapes.sky.draw(context, program_state, this.sky_state, this.materials.skybox);
             this.shapes.floor.draw(context, program_state, this.floor_state, this.materials.floor_material);
 
+            // Draw skyscrapper
             for(let i = 0; i < this.skyscrapers_states.length; i++) {
                 this.shapes.skyscraper.draw(context, program_state, this.skyscrapers_states[i].transformation, this.materials.skyscraper_material);
                 if (this.hasPlayerCollided(i)) {
                     this.end_game = true;
                 }
             }
+
+            // Draw cows
+            let cows_animating = this.is_animating(program_state.animation_time)
+            if (cows_animating) {
+                for (let i = 0; i < cows_animating.length; i++) {
+                    this.animate_cow(cows_animating[i], program_state.animation_time)
+                    if (this.cows_states[cows_animating[i]].y >= this.player.y) {
+                        this.cows_states = this.cows_states.filter(item => item !== this.cows_states[cows_animating[i]]);
+                        this.score += 50;
+                        this.show_beam = false;
+                    }
+                }
+            } else { this.show_beam = this.beaming = false; }
+            console.log(this.cows_states.length)
             for(let i = 0; i < this.cows_states.length; i++) {
-
-
                 this.shapes.cow.draw(context, program_state, this.cows_states[i].transformation, this.materials.cow_material);
             }
 
+            // Draw light beam conditionally
             if (this.show_beam) {
                 let beam_state = Mat4.identity()
                     .times(Mat4.translation(this.player.x, this.player.y - this.beam_height, this.player.z))
