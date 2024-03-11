@@ -83,8 +83,6 @@ export class MooBeam extends Scene {
             }
         }, 1000);
 
-
-
         this.world_size = 200;
         this.sky_state = Mat4.identity().times(Mat4.scale(this.world_size, this.world_size, this.world_size));
         this.floor_state = Mat4.identity().times(Mat4.scale(this.world_size, this.world_size, this.world_size)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
@@ -266,6 +264,12 @@ export class MooBeam extends Scene {
             if (!this.beaming) {
                 this.show_beam = true;
                 this.check_cow_within_shadow()
+            }
+            if (this.show_beam) {
+                setTimeout(() => {
+                    this.show_beam = false;
+                    this.beaming = false;
+                }, 1000);
             }
         });
         this.key_triggered_button("Turn left", [","], this.turn_left, "#6E6460");
