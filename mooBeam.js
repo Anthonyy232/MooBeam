@@ -43,6 +43,15 @@ class Cow {
     }
 }
 
+class Road_Long {
+    constructor(transformation, x, y ,z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.transformation = transformation;
+    }
+}
+
 function format_time(time) {
     let minutes_digits = Math.floor(time / 60);
     let seconds_digits = time % 60;
@@ -55,10 +64,12 @@ export class MooBeam extends Scene {
         this.shapes = {
             object: new defs.Subdivision_Sphere(4),
             ufo: new Shape_From_File("assets/Ufo.obj"),
+            //cow: new defs.Subdivision_Sphere(4),
             cow: new Shape_From_File("assets/cow.obj"),
             sky: new defs.Subdivision_Sphere(4),
             floor: new Square(),
             skyscraper: new Cube(),
+            road_long: new Square(),
             beam: new Rounded_Closed_Cone(2, 20, [[0, 5], [0, 1]]),
             shadow: new defs.Regular_2D_Polygon(2, 20)
         };
@@ -100,7 +111,11 @@ export class MooBeam extends Scene {
         this.skyscraper_size = 10;
         this.skyscraper_transformation = Mat4.identity()
             .times(Mat4.scale(this.skyscraper_size, this.skyscraper_height, this.skyscraper_size))
+        this.road_transformation = Mat4.identity().times(Mat4.rotation(Math.PI/2, 1, 0, 0)).times(Mat4.scale(20, 10, 10));
+        this.road_inv_transform = Mat4.identity().times(Mat4.scale(1/20, 1/20, 1/20)).times(Mat4.rotation(-Math.PI/2, 1, 0, 0));
         this.skyscrapers_count = 1;
+        this.roads_count = 10;
+
         this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_transformation);
         this.camera_angle = 0;
         this.beam_height = 10;
@@ -137,6 +152,14 @@ export class MooBeam extends Scene {
             skyscraper_material: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 0.6, diffusivity: 0.5, specularity: 1,
                 texture: new Texture("assets/skyscraper.png")
+            }),
+            road1_material: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#000000"), ambient: 0.6, diffusivity: 1, specularity: 0.9,
+                texture: new Texture("assets/road_crosswalk.jpg")
+            }),
+            road2_material: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#000000"), ambient: 0.6, diffusivity: 1, specularity: 0.9,
+                texture: new Texture("assets/road.jpg")
             })
         }
     }
@@ -153,6 +176,7 @@ export class MooBeam extends Scene {
         }
         return skyscrapers_states;
     }
+
     generateCows(cow_transformation, num_cows = this.cows_count) {
         let cows_states = [];
         for(let i = 0; i < num_cows; i++) {
@@ -419,6 +443,7 @@ export class MooBeam extends Scene {
             this.shapes.ufo.draw(context, program_state, this.ufo_state, this.materials.ufo_material);
             this.shapes.sky.draw(context, program_state, this.sky_state, this.materials.skybox);
             this.shapes.floor.draw(context, program_state, this.floor_state, this.materials.floor_material);
+            //this.shapes.road_long.draw(context, program_state, Mat4.identity().times(Mat4.translation(0, 30, 0)).times(Mat4.scale(10, 10, 10)), this.materials.road1_material);
 
             // Draw skyscrapper
             for(let i = 0; i < this.skyscrapers_states.length; i++) {
@@ -426,6 +451,27 @@ export class MooBeam extends Scene {
                 if (this.hasPlayerCollided(i)) {
                     this.end_game = true;
                 }
+            }
+
+            //draw roads
+
+            let roads = [];
+            let mat1 = this.materials.road1_material;
+            let mat2 = this.materials.road2_material;
+
+            let m = Mat4.identity().times(Mat4.translation(0, 1, 0));
+            let roads_transforms = [];
+            roads_transforms.push(m.times(Mat4.translation(0, 0, 0)).times(this.road_transformation));
+            roads_transforms.push(m.times(Mat4.translation(-30, 0, -30)).times(Mat4.rotation(Math.PI/2,0,1, 0)).times(this.road_transformation));
+            roads_transforms.push(m.times(Mat4.translation(30, 0, 0)).times(this.road_transformation));
+
+            let roads_materials = [];
+            roads_materials.push(mat1);
+            roads_materials.push(mat1);
+            roads_materials.push(mat2);
+
+            for(let i = 0; i < roads_transforms.length; i++) {
+                this.shapes.road_long.draw(context, program_state, roads_transforms[i], roads_materials[i]);
             }
 
             // Draw cows
