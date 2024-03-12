@@ -405,8 +405,8 @@ export class MooBeam extends Scene {
                 let third_person = Mat4.inverse(Mat4.identity()
                     .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
                     .times(Mat4.rotation(this.camera_angle, 0, 1, 0))
-                    .times(Mat4.translation(0,5,13))
-                    .times(Mat4.rotation(-Math.PI / 8, 1, 0, 0 ))
+                    .times(Mat4.translation(0,12,30))
+                    .times(Mat4.rotation(-Math.PI / 6, 1, 0, 0 ))
                 )
                 let angle = Math.atan(1 / Math.sqrt(2));
                 let isometric = Mat4.inverse(Mat4.identity()
