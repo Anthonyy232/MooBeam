@@ -58,6 +58,7 @@ export class MooBeam extends Scene {
             cow: new Shape_From_File("assets/cow.obj"),
             sky: new defs.Subdivision_Sphere(4),
             floor: new Square(),
+            road: new Square(),
             skyscraper: new Cube(),
             beam: new Rounded_Closed_Cone(2, 20, [[0, 5], [0, 1]]),
             shadow: new defs.Regular_2D_Polygon(2, 20)
@@ -85,6 +86,10 @@ export class MooBeam extends Scene {
         this.world_size = 200;
         this.sky_state = Mat4.identity().times(Mat4.scale(this.world_size, this.world_size, this.world_size));
         this.floor_state = Mat4.identity().times(Mat4.scale(this.world_size, this.world_size, this.world_size)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+        this.road_state = Mat4.identity()
+            .times(Mat4.translation(0, 1, 0))
+            .times(Mat4.scale(5, this.world_size, this.world_size))
+            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
         this.player = new Player(0, this.starting_location.y , 0);
         this.ufo_state = Mat4.identity();
         this.skyscrapper_height = 25;
@@ -102,6 +107,7 @@ export class MooBeam extends Scene {
             .times(Mat4.scale(this.skyscraper_size, this.skyscraper_height, this.skyscraper_size))
         this.skyscrapers_count = 1;
         this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_transformation);
+        this.road_count = 20;
         this.camera_angle = 0;
         this.beam_height = 10;
         this.beam_size = 5;
@@ -133,6 +139,9 @@ export class MooBeam extends Scene {
             floor_material: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 0.4, diffusivity: 0.5, specularity: 0.5,
                 texture: new Texture("assets/floor.jpg")
+            }),
+            road_material: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#ffffff"), ambient: 1, diffusivity: 1, specularity: 1
             }),
             skyscraper_material: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 0.6, diffusivity: 0.5, specularity: 1,
@@ -426,6 +435,29 @@ export class MooBeam extends Scene {
                 if (this.hasPlayerCollided(i)) {
                     this.end_game = true;
                 }
+            }
+
+            // Draw roads
+            let x_pos_road = -this.world_size + 4;
+            for (let i = 0; i < 12; i++) {
+                x_pos_road = x_pos_road + 30;
+                this.road_state = Mat4.identity()
+                    .times(Mat4.translation(x_pos_road, .1, 0))
+                    .times(Mat4.scale(3, this.world_size, 166 ))
+                    .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+                this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
+            }
+
+            let z_pos_road = -this.world_size + 4;
+            for (let i = 0; i < 12; i++) {
+                z_pos_road = z_pos_road + 30;
+                this.road_state = Mat4.identity()
+                    .times(Mat4.translation(0, .1, z_pos_road))
+                    .times(Mat4.scale(166, this.world_size, 3))
+                    .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+                this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
             }
 
             // Draw cows
