@@ -55,8 +55,7 @@ export class MooBeam extends Scene {
         this.shapes = {
             object: new defs.Subdivision_Sphere(4),
             ufo: new Shape_From_File("assets/Ufo.obj"),
-            cow: new defs.Subdivision_Sphere(4),
-            //cow: new Shape_From_File("assets/cow.obj"),
+            cow: new Shape_From_File("assets/cow.obj"),
             sky: new defs.Subdivision_Sphere(4),
             floor: new Square(),
             skyscraper: new Cube(),
@@ -208,15 +207,13 @@ export class MooBeam extends Scene {
 
     hasEscapedBounds() { return Math.sqrt(this.player.x**2 + this.player.z**2) > this.world_size; }
 
-    animate_cow(i, program_time) {
-        //NEED TO DELETE COW FROM LIST ONCE IT SUCKS ONE UP, AND THEN GENERATE ANOTHER ONE
-        //CHANGE SETTING TRANSFORMATION TO SETTING POSITION XZ this.cows_states[i].local_time
-        let working_time = Math.min(program_time - this.cows_states[i].local_time, 1500);
+    animate_cow(i, program_state) {
+        let working_time = Math.min(program_state.animation_time - this.cows_states[i].local_time, 1500);
         this.cows_states[i].transformation = this.cows_states[i].transformation.times(Mat4.translation(0, working_time * 0.01, 0));
         this.cows_states[i].y = this.cows_states[i].y + (working_time * 0.01)
     }
 
-    is_animating(program_time) {
+    is_animating(program_state) {
         let cows_animating = [];
         if (this.cows_states) {
             for (let i = 0; i < this.cows_states.length; i++) {
@@ -224,7 +221,7 @@ export class MooBeam extends Scene {
                     cows_animating.push(i)
                 }
                 else {
-                    this.cows_states[i].local_time = program_time;
+                    this.cows_states[i].local_time = program_state.animation_time;
                 }
             }
         }
@@ -235,7 +232,7 @@ export class MooBeam extends Scene {
         if (this.cows_states) {
             for (let i = 0; i < this.cows_states.length; i++) {
                 let distance = (this.player.x - this.cows_states[i].x)**2 + (this.player.z - this.cows_states[i].z)**2
-                if (distance <= this.cow_size + this.beam_size) {
+                if (distance <= this.cow_size + this.beam_size + 23) {
                     this.cows_states[i].animate = true;
                 }
             }
@@ -432,10 +429,10 @@ export class MooBeam extends Scene {
             }
 
             // Draw cows
-            let cows_animating = this.is_animating(program_state.animation_time)
+            let cows_animating = this.is_animating(program_state)
             if (cows_animating) {
                 for (let i = 0; i < cows_animating.length; i++) {
-                    this.animate_cow(cows_animating[i], program_state.animation_time)
+                    this.animate_cow(cows_animating[i], program_state)
                     if (this.cows_states[cows_animating[i]].y >= this.player.y) {
                         this.cows_states = this.cows_states.filter(item => item !== this.cows_states[cows_animating[i]]);
                         this.score += 50;
