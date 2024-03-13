@@ -105,7 +105,7 @@ export class MooBeam extends Scene {
         this.skyscraper_size = 5;
         this.skyscraper_transformation = Mat4.identity()
             .times(Mat4.scale(this.skyscraper_size, this.skyscraper_height, this.skyscraper_size))
-        this.skyscrapers_count = 1;
+        this.skyscrapers_count = 25;
         this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_transformation);
         this.road_count = 20;
         this.camera_angle = 0;
@@ -150,15 +150,50 @@ export class MooBeam extends Scene {
         }
     }
     generateSkyscrapers(skyscraper_transformation, num_skyscrapers = this.skyscrapers_count) {
+        function getRandomInt(max) {
+            return Math.floor(Math.random() * max);
+        }
+
         let skyscrapers_states = [];
-        for(let i = 0; i < num_skyscrapers; i++) {
-            //let x = Math.random() * 100 - 50;
-            let x = 0;
-            //let z = Math.random() * 100 - 50;
-            let z = -20;
+        for (let i = 0; i < num_skyscrapers; i++) {
+            let x = 40 * getRandomInt(3);
+            let z = 40 * getRandomInt(3);
+
+            switch (getRandomInt(2)) {
+                case 0:
+                    x += 11;
+                    break;
+                case 1:
+                    x += 29;
+                    break;
+            }
+            switch (getRandomInt(2)) {
+                case 0:
+                    z += 11;
+                    break;
+                case 1:
+                    z += 29;
+                    break;
+            }
+
+            switch (getRandomInt(4)) {
+                case 0:
+                    break;
+                case 1:
+                    x = -x;
+                    break;
+                case 2:
+                    z = -z;
+                    break;
+                case 3:
+                    x = -x;
+                    z = -z;
+                    break;
+            }
 
             let skyscraper_transformed = skyscraper_transformation.times(Mat4.translation(x/this.skyscraper_size, 1, z/this.skyscraper_size));
             skyscrapers_states.push(new Skyscraper(skyscraper_transformed, x, 0, z));
+
         }
         return skyscrapers_states;
     }
@@ -280,6 +315,14 @@ export class MooBeam extends Scene {
         });
         this.key_triggered_button("Turn left", [","], this.turn_left, "#6E6460");
         this.key_triggered_button("Turn right", ["."], this.turn_right, "#6E6460");
+        this.key_triggered_button("Log", ["c"], () => {
+            function getRandomInt(max) {
+                return Math.floor(Math.random() * max);
+            }
+            let test = getRandomInt(10);
+            console.log(getRandomInt(10));
+        });
+
     }
 
     reset() {
