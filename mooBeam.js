@@ -106,12 +106,12 @@ export class MooBeam extends Scene {
         this.skyscraper_size = 5;
         this.skyscraper_transformation = Mat4.identity()
             .times(Mat4.scale(this.skyscraper_size, this.skyscraper_height, this.skyscraper_size))
-        this.skyscrapers_count = 1;
+        this.skyscrapers_count = 25;
         this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_transformation);
         this.camera_angle = 0;
         this.beam_height = 10;
         this.beam_size = 5;
-        this.cows_count = 100;
+        this.cows_count = 30;
         this.cow_size = 2;
         this.cows_states = this.generateCows(Mat4.identity());
         this.initial_camera_location = Mat4.look_at(vec3(0, 10 + this.starting_location.y, 20), vec3(0, this.starting_location.y, 0), vec3(0, 1 + this.starting_location.y, 0));
@@ -135,7 +135,7 @@ export class MooBeam extends Scene {
                 texture: new Texture("assets/ufo.jpg")
             }),
             shadow_material: new Material(new defs.Phong_Shader(1), {
-                color: hex_color("#000000", 0.95), ambient: 0.1, diffusivity: 0, specularity: 0,
+                color: hex_color("#000000", 0.97), ambient: 0.1, diffusivity: 0, specularity: 0,
             }),
             cow_material: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 0.7, diffusivity: 0.5, specularity: 0.5,
@@ -155,31 +155,57 @@ export class MooBeam extends Scene {
             skyscraper_material: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 0.6, diffusivity: 0.5, specularity: 1,
                 texture: new Texture("assets/skyscraper.png")
-            }),
-            road1_material: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#000000"), ambient: 0.6, diffusivity: 1, specularity: 0.9,
-                texture: new Texture("assets/road_crosswalk.jpg")
-            }),
-            road2_material: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#000000"), ambient: 0.6, diffusivity: 1, specularity: 0.9,
-                texture: new Texture("assets/road.jpg")
             })
         }
     }
     generateSkyscrapers(skyscraper_transformation, num_skyscrapers = this.skyscrapers_count) {
+        function getRandomInt(max) {
+            return Math.floor(Math.random() * max);
+        }
+
         let skyscrapers_states = [];
-        for(let i = 0; i < num_skyscrapers; i++) {
-            //let x = Math.random() * 100 - 50;
-            let x = 0;
-            //let z = Math.random() * 100 - 50;
-            let z = -20;
+        for (let i = 0; i < num_skyscrapers; i++) {
+            let x = 40 * getRandomInt(3);
+            let z = 40 * getRandomInt(3);
+
+            switch (getRandomInt(2)) {
+                case 0:
+                    x += 11;
+                    break;
+                case 1:
+                    x += 29;
+                    break;
+            }
+            switch (getRandomInt(2)) {
+                case 0:
+                    z += 11;
+                    break;
+                case 1:
+                    z += 29;
+                    break;
+            }
+
+            switch (getRandomInt(4)) {
+                case 0:
+                    break;
+                case 1:
+                    x = -x;
+                    break;
+                case 2:
+                    z = -z;
+                    break;
+                case 3:
+                    x = -x;
+                    z = -z;
+                    break;
+            }
 
             let skyscraper_transformed = skyscraper_transformation.times(Mat4.translation(x/this.skyscraper_size, 1, z/this.skyscraper_size));
             skyscrapers_states.push(new Skyscraper(skyscraper_transformed, x, 0, z));
+
         }
         return skyscrapers_states;
     }
-
     generateCows(cow_transformation, num_cows = this.cows_count) {
         let cows_states = [];
         for(let i = 0; i < num_cows; i++) {
@@ -187,12 +213,12 @@ export class MooBeam extends Scene {
             let x = 0;
             let z = 0;
             while (inside) {
-                x = Math.random() * 300 - 150;
-                z = Math.random() * 300 - 150;
+                x = Math.random() * 100 - 50;
+                z = Math.random() * 100 - 50;
                 if (!this.cowInSkyscraper(x, z)) { inside = false; }
             }
             let cow_transformed = cow_transformation.times(Mat4.translation(x, 1, z));
-            cows_states.push(new Cow(cow_transformed, x, 0, z, false, 0, 0));
+            cows_states.push(new Cow(cow_transformed, x, 0, z, false, 0));
         }
         return cows_states;
     }
@@ -282,7 +308,7 @@ export class MooBeam extends Scene {
         if (this.cows_states) {
             for (let i = 0; i < this.cows_states.length; i++) {
                 let distance = (this.player.x - this.cows_states[i].x)**2 + (this.player.z - this.cows_states[i].z)**2
-                if (distance <= this.cow_size + this.beam_size + 24) {
+                if (distance <= this.cow_size + this.beam_size + 23) {
                     this.cows_states[i].animate = true;
                 }
             }
@@ -321,6 +347,14 @@ export class MooBeam extends Scene {
         });
         this.key_triggered_button("Turn left", [","], this.turn_left, "#6E6460");
         this.key_triggered_button("Turn right", ["."], this.turn_right, "#6E6460");
+        this.key_triggered_button("Log", ["c"], () => {
+            function getRandomInt(max) {
+                return Math.floor(Math.random() * max);
+            }
+            let test = getRandomInt(10);
+            console.log(getRandomInt(10));
+        });
+
     }
 
     reset() {
@@ -341,6 +375,7 @@ export class MooBeam extends Scene {
             let x_comp = Math.cos(this.camera_angle);
             let z_comp = Math.sin(this.camera_angle);
             this.player.velocity.z -= this.player.acceleration.z;
+            this.player.velocity.x -= this.player.acceleration.x;
             if (Math.abs(this.player.velocity.z) > this.player.max_speed) {
                 this.player.velocity.z = -this.player.max_speed;
             }
@@ -374,6 +409,7 @@ export class MooBeam extends Scene {
         if (!this.beaming) {
             let x_comp = Math.cos(this.camera_angle);
             let z_comp = Math.sin(this.camera_angle);
+
             this.player.velocity.x -= this.player.acceleration.x;
             if (Math.abs(this.player.velocity.x) > this.player.max_speed) {
                 this.player.velocity.x = -this.player.max_speed
@@ -391,6 +427,7 @@ export class MooBeam extends Scene {
         if (!this.beaming) {
             let x_comp = Math.cos(this.camera_angle);
             let z_comp = Math.sin(this.camera_angle);
+
             this.player.velocity.x += this.player.acceleration.x;
             if (Math.abs(this.player.velocity.x) > this.player.max_speed) {
                 this.player.velocity.x = this.player.max_speed
@@ -403,9 +440,13 @@ export class MooBeam extends Scene {
         }
     }
 
-    turn_left() { this.camera_angle += Math.PI / 36; }
+    turn_left() {
+        this.camera_angle += Math.PI / 36;
+    }
 
-    turn_right() { this.camera_angle -= Math.PI / 36; }
+    turn_right() {
+        this.camera_angle -= Math.PI / 36;
+    }
 
     display(context, program_state) {
         // Refresh the score and timer HTML elements
@@ -462,7 +503,6 @@ export class MooBeam extends Scene {
             this.shapes.ufo.draw(context, program_state, this.ufo_state, this.materials.ufo_material);
             this.shapes.sky.draw(context, program_state, this.sky_state, this.materials.skybox);
             this.shapes.floor.draw(context, program_state, this.floor_state, this.materials.floor_material);
-            //this.shapes.road_long.draw(context, program_state, Mat4.identity().times(Mat4.translation(0, 30, 0)).times(Mat4.scale(10, 10, 10)), this.materials.road1_material);
 
             // Draw skyscrapper
             for (let i = 0; i < this.skyscrapers_states.length; i++) {
