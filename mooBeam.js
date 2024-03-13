@@ -223,12 +223,13 @@ export class MooBeam extends Scene {
             let inside = true;
             let x = 0;
             let z = 0;
+            let rotAngle = Math.random() * (2 * Math.PI);
             while (inside) {
                 x = Math.random() * 100 - 50;
                 z = Math.random() * 100 - 50;
                 if (!this.cowInSkyscraper(x, z)) { inside = false; }
             }
-            let cow_transformed = cow_transformation.times(Mat4.translation(x, 1, z));
+            let cow_transformed = cow_transformation.times(Mat4.translation(x, 1, z)).times(Mat4.rotation(rotAngle, 0, 1, 0));
             cows_states.push(new Cow(cow_transformed, x, 0, z, false, 0));
         }
         return cows_states;
