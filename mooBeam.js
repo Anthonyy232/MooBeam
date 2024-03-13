@@ -33,14 +33,15 @@ class Skyscraper {
 }
 
 class Cow {
-    constructor(transformation, x, y ,z, animate, local_time) {
+    constructor(transformation, x, y ,z, animate, local_time, angle, rotAngle) {
         this.x = x;
         this.y = y;
         this.z = z;
         this.transformation = transformation;
         this.animate = animate;
         this.local_time = local_time;
-        this.angle = 0;
+        this.angle = angle;
+        this.rotAngle = rotAngle;
     }
 }
 
@@ -75,6 +76,7 @@ export class MooBeam extends Scene {
         this.time = 90;
         this.show_beam = false;
         this.beaming = false;
+        this.desired = null;
 
         // Decrement the time every second
         let timer = setInterval(() => {
@@ -107,7 +109,7 @@ export class MooBeam extends Scene {
         this.beam_size = 5;
         this.cows_count = 100;
         this.cow_size = 2;
-        this.cows_states = this.generateCows(Mat4.identity());
+        this.cows_states = this.generateCows();
         this.initial_camera_location = Mat4.look_at(vec3(0, 10 + this.starting_location.y, 20), vec3(0, this.starting_location.y, 0), vec3(0, 1 + this.starting_location.y, 0));
         this.final_local_time = 0;
         // *** Materials
@@ -202,7 +204,7 @@ export class MooBeam extends Scene {
         }
         return skyscrapers_states;
     }
-    generateCows(cow_transformation, num_cows = this.cows_count) {
+    generateCows(num_cows = this.cows_count) {
         let cows_states = [];
         for(let i = 0; i < num_cows; i++) {
             let inside = true;
@@ -214,8 +216,10 @@ export class MooBeam extends Scene {
                 z = Math.random() * 200 - 100;
                 if (!this.cowInSkyscraper(x, z)) { inside = false; }
             }
-            let cow_transformed = cow_transformation.times(Mat4.translation(x, 1, z)).times(Mat4.rotation(rotAngle, 0, 1, 0));
-            cows_states.push(new Cow(cow_transformed, x, 0, z, false, 0));
+            let cow_transformed = Mat4.identity()
+                .times(Mat4.translation(x, 1, z))
+                .times(Mat4.rotation(rotAngle, 0, 1, 0));
+            cows_states.push(new Cow(cow_transformed, x, 0, z, false, 0, 0, rotAngle));
         }
         return cows_states;
     }
@@ -328,7 +332,7 @@ export class MooBeam extends Scene {
     }
 
     make_control_panel(program_state) {
-        this.key_triggered_button("Isometric View", ["Control", "0"], () => this.attached = () => null);
+        this.key_triggered_button("Top View", ["Control", "0"], () => this.attached = () => null);
         this.new_line();
         this.key_triggered_button("Behind View", ["Control", "1"], () => this.attached = () => this.object);
 
@@ -376,14 +380,15 @@ export class MooBeam extends Scene {
         this.time = 90;
         this.player = new Player(0, this.starting_location.y , 0);
         this.ufo_state = Mat4.identity();
-        this.cows_states = this.generateCows(Mat4.identity());
+        this.cows_states = this.generateCows();
         this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_transformation);
         this.player.velocity = {x: 30, y: 30, z: 30};
+        this.children.clear();
     }
 
     move_forward() {
         this.begin_game = true;
-        if (!this.beaming) {
+        if (!this.beaming && !this.end_game) {
             let x_comp = Math.cos(this.camera_angle);
             let z_comp = Math.sin(this.camera_angle);
             this.player.velocity.z -= this.player.acceleration.z;
@@ -401,7 +406,7 @@ export class MooBeam extends Scene {
 
     move_backward() {
         this.begin_game = true;
-        if (!this.beaming) {
+        if (!this.beaming && !this.end_game) {
             let x_comp = Math.cos(this.camera_angle);
             let z_comp = Math.sin(this.camera_angle);
             this.player.velocity.z += this.player.acceleration.z;
@@ -418,7 +423,7 @@ export class MooBeam extends Scene {
 
     move_left() {
         this.begin_game = true;
-        if (!this.beaming) {
+        if (!this.beaming && !this.end_game) {
             let x_comp = Math.cos(this.camera_angle);
             let z_comp = Math.sin(this.camera_angle);
 
@@ -436,7 +441,7 @@ export class MooBeam extends Scene {
 
     move_right() {
         this.begin_game = true;
-        if (!this.beaming) {
+        if (!this.beaming && !this.end_game) {
             let x_comp = Math.cos(this.camera_angle);
             let z_comp = Math.sin(this.camera_angle);
 
@@ -453,11 +458,15 @@ export class MooBeam extends Scene {
     }
 
     turn_left() {
-        this.camera_angle += Math.PI / 36;
+        if (!this.end_game) {
+            this.camera_angle += Math.PI / 36;
+        }
     }
 
     turn_right() {
-        this.camera_angle -= Math.PI / 36;
+        if (!this.end_game) {
+            this.camera_angle -= Math.PI / 36;
+        }
     }
 
     display(context, program_state) {
@@ -494,21 +503,19 @@ export class MooBeam extends Scene {
             .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
 
         if (true) { // For testing purposes set to false so the camera can fly around
-            let third_person = Mat4.inverse(Mat4.identity()
+            let behind = Mat4.inverse(Mat4.identity()
                 .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
                 .times(Mat4.rotation(this.camera_angle, 0, 1, 0))
                 .times(Mat4.translation(0, 12, 30))
                 .times(Mat4.rotation(-Math.PI / 6, 1, 0, 0))
             )
-            let angle = Math.atan(1 / Math.sqrt(2));
-            let isometric = Mat4.inverse(Mat4.identity()
-                .times(Mat4.rotation(angle, 1, 0, 0))
-                .times(Mat4.rotation(Math.PI / 4, 0, 1, 0))
-                .times(Mat4.translation(-this.player.x, -this.player.y, -this.player.z))
+            let top = Mat4.inverse(Mat4.identity()
+                .times(Mat4.translation(this.player.x, this.player.y+60, this.player.z))
+                .times(Mat4.rotation(-Math.PI / 2, 1, 0, 0))
             );
             this.object = this.ufo_state;
-            let desired = this.attached && this.attached() != null ? third_person : this.initial_camera_location // <--set as initial until isometric works
-            program_state.set_camera(desired);
+            this.desired = this.attached && this.attached() != null ? top : behind
+            program_state.set_camera(this.desired);
         }
 
         // The parameters of the Light are: position, color, size
@@ -662,7 +669,15 @@ export class MooBeam extends Scene {
             this.show_beam = this.beaming = false;
         }
         for (let i = 0; i < this.cows_states.length; i++) {
-            this.shapes.cow.draw(context, program_state, this.cows_states[i].transformation.times(Mat4.rotation(this.cows_states[i].angle, 0, 1, 1)), this.materials.cow_material);
+            if (this.cows_states[i].angle === 0) {
+                this.shapes.cow.draw(context, program_state, this.cows_states[i].transformation, this.materials.cow_material);
+            } else {
+                let transformation = Mat4.identity()
+                    .times(Mat4.translation(this.cows_states[i].x, this.cows_states[i].y, this.cows_states[i].z))
+                    .times(Mat4.rotation(-this.cows_states[i].rotAngle, 0, 1, 0))
+                    .times(Mat4.rotation(this.cows_states[i].angle, 0, 1, 0));
+                this.shapes.cow.draw(context, program_state, transformation, this.materials.cow_material);
+            }
         }
 
         // Draw light beam conditionally
