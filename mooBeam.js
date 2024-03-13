@@ -536,6 +536,20 @@ export class MooBeam extends Scene {
 
                 let dash_pos = -120 + 1.4; // -4.5 + 3.1
                 for (let k = 0; k < 7; k++) {
+                    this.road_state = Mat4.identity()
+                        .times(Mat4.translation(x_pos_road + 3.5, 0.02, dash_pos + 18.5))
+                        .times(Mat4.scale(.075, this.world_size, 16.5 ))
+                        .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+                    this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
+
+                    this.road_state = Mat4.identity()
+                        .times(Mat4.translation(x_pos_road - 3.5, 0.02, dash_pos + 18.5))
+                        .times(Mat4.scale(.075, this.world_size, 16.5 ))
+                        .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+                    this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
+
                     for (let j = 0; j < 11; j++ ) {
                         dash_pos += 3.1;
                         this.road_state = Mat4.identity()
@@ -545,6 +559,7 @@ export class MooBeam extends Scene {
 
                         this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
                     }
+
                     dash_pos += 5.9;
                 }
 
@@ -561,6 +576,20 @@ export class MooBeam extends Scene {
 
                 let dash_pos = -120 + 1.4; // -4.5 + 3.1
                 for (let k = 0; k < 7; k++) {
+                    this.road_state = Mat4.identity()
+                        .times(Mat4.translation(dash_pos + 18.5, 0.02, z_pos_road + 3.5))
+                        .times(Mat4.scale(16.5, this.world_size, 0.075 ))
+                        .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+                    this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
+
+                    this.road_state = Mat4.identity()
+                        .times(Mat4.translation(dash_pos + 18.5, 0.02, z_pos_road - 3.5))
+                        .times(Mat4.scale(16.5, this.world_size, 0.075 ))
+                        .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+                    this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
+
                     for (let j = 0; j < 11; j++ ) {
                         dash_pos += 3.1;
                         this.road_state = Mat4.identity()
