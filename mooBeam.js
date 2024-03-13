@@ -44,13 +44,6 @@ class Cow {
     }
 }
 
-class Road {
-    constructor(transformation, material) {
-        this.transformation = transformation;
-        this.material = material;
-    }
-}
-
 function format_time(time) {
     let minutes_digits = Math.floor(time / 60);
     let seconds_digits = time % 60;
@@ -64,6 +57,8 @@ export class MooBeam extends Scene {
             object: new defs.Subdivision_Sphere(4),
             ufo: new Shape_From_File("assets/Ufo.obj"),
             cow: new Shape_From_File("assets/cow.obj"),
+            lamp: new Shape_From_File("assets/lamp.obj"),
+            bench: new Shape_From_File("assets/bench.obj"),
             sky: new defs.Subdivision_Sphere(4),
             floor: new Square(),
             road: new Square(),
@@ -106,24 +101,15 @@ export class MooBeam extends Scene {
         this.skyscraper_size = 5;
         this.skyscraper_transformation = Mat4.identity()
             .times(Mat4.scale(this.skyscraper_size, this.skyscraper_height, this.skyscraper_size))
-        this.skyscrapers_count = 25;
+        this.skyscrapers_count = 120;
         this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_transformation);
         this.camera_angle = 0;
         this.beam_height = 10;
         this.beam_size = 5;
-        this.cows_count = 30;
+        this.cows_count = 100;
         this.cow_size = 2;
         this.cows_states = this.generateCows(Mat4.identity());
         this.initial_camera_location = Mat4.look_at(vec3(0, 10 + this.starting_location.y, 20), vec3(0, this.starting_location.y, 0), vec3(0, 1 + this.starting_location.y, 0));
-
-        this.road_transformation = Mat4.identity()
-            .times(Mat4.translation(-26, 0.02, 0))
-            .times(Mat4.rotation(Math.PI/2, 1, 0, 0))
-            .times(Mat4.scale(10, 4, 10))
-        this.road_transformation_inv = Mat4.identity()
-            .times(Mat4.rotation(Math.PI/2, 1, 0, 0))
-            .times(Mat4.translation(-16, 0.02, 0))
-            .times(Mat4.scale(10, 4, 10))
 
         // *** Materials
         this.materials = {
@@ -225,23 +211,14 @@ export class MooBeam extends Scene {
             let z = 0;
             let rotAngle = Math.random() * (2 * Math.PI);
             while (inside) {
-                x = Math.random() * 100 - 50;
-                z = Math.random() * 100 - 50;
+                x = Math.random() * 200 - 100;
+                z = Math.random() * 200 - 100;
                 if (!this.cowInSkyscraper(x, z)) { inside = false; }
             }
             let cow_transformed = cow_transformation.times(Mat4.translation(x, 1, z)).times(Mat4.rotation(rotAngle, 0, 1, 0));
             cows_states.push(new Cow(cow_transformed, x, 0, z, false, 0));
         }
         return cows_states;
-    }
-
-    generateRoads() {
-        let roads = []
-        roads.push(
-            new Road(this.road_transformation, this.materials.road1_material),
-            new Road(this.road_transformation_inv, this.materials.road1_material),
-        )
-        return roads;
     }
 
     hasPlayerCollided(i) {
