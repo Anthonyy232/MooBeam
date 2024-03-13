@@ -149,7 +149,10 @@ export class MooBeam extends Scene {
                 color: hex_color("#000000"), ambient: 0.4, diffusivity: 0.5, specularity: 0.5,
                 texture: new Texture("assets/floor.jpg")
             }),
-            road_material: new Material(new defs.Fake_Bump_Map(1), {
+            road_material: new Material(new defs.Phong_Shader(), {
+                color: hex_color("#c4c4c4"), ambient: 1, diffusivity: 1, specularity: 1
+            }),
+            dash_material: new Material(new defs.Phong_Shader(), {
                 color: hex_color("#ffffff"), ambient: 1, diffusivity: 1, specularity: 1
             }),
             skyscraper_material: new Material(new defs.Fake_Bump_Map(1), {
@@ -530,6 +533,21 @@ export class MooBeam extends Scene {
                     .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
 
                 this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
+
+                let dash_pos = -120 + 1.4; // -4.5 + 3.1
+                for (let k = 0; k < 7; k++) {
+                    for (let j = 0; j < 11; j++ ) {
+                        dash_pos += 3.1;
+                        this.road_state = Mat4.identity()
+                            .times(Mat4.translation(x_pos_road, 0.02, dash_pos))
+                            .times(Mat4.scale(.2, this.world_size, .5 ))
+                            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+                        this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
+                    }
+                    dash_pos += 5.9;
+                }
+
             }
 
             let z_pos_road = -this.world_size + 40;
@@ -540,6 +558,20 @@ export class MooBeam extends Scene {
                     .times(Mat4.scale(120, this.world_size, 4))
                     .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
                 this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
+
+                let dash_pos = -120 + 1.4; // -4.5 + 3.1
+                for (let k = 0; k < 7; k++) {
+                    for (let j = 0; j < 11; j++ ) {
+                        dash_pos += 3.1;
+                        this.road_state = Mat4.identity()
+                            .times(Mat4.translation(dash_pos, 0.02, z_pos_road))
+                            .times(Mat4.scale(.5, this.world_size, .2 ))
+                            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+                        this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
+                    }
+                    dash_pos += 5.9;
+                }
             }
 
             let roads = this.generateRoads();
