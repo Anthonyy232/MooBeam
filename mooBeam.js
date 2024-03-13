@@ -155,6 +155,14 @@ export class MooBeam extends Scene {
             skyscraper_material: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 0.6, diffusivity: 0.5, specularity: 1,
                 texture: new Texture("assets/skyscraper.png")
+            }),
+            road1_material: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#000000"), ambient: 0.6, diffusivity: 1, specularity: 0.9,
+                texture: new Texture("assets/road_crosswalk.jpg")
+            }),
+            road2_material: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#000000"), ambient: 0.6, diffusivity: 1, specularity: 0.9,
+                texture: new Texture("assets/road.jpg")
             })
         }
     }
@@ -532,7 +540,8 @@ export class MooBeam extends Scene {
                     .times(Mat4.scale(120, this.world_size, 4))
                     .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
                 this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
-              }
+            }
+
             let roads = this.generateRoads();
             for(let i = 0; i < roads.length; i++) {
                 this.shapes.road_long.draw(context, program_state, roads[i].transformation, roads[i].material);
