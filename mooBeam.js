@@ -209,12 +209,13 @@ export class MooBeam extends Scene {
             let inside = true;
             let x = 0;
             let z = 0;
+            let rotAngle = Math.random() * (2 * Math.PI);
             while (inside) {
                 x = Math.random() * 200 - 100;
                 z = Math.random() * 200 - 100;
                 if (!this.cowInSkyscraper(x, z)) { inside = false; }
             }
-            let cow_transformed = cow_transformation.times(Mat4.translation(x, 1, z));
+            let cow_transformed = cow_transformation.times(Mat4.translation(x, 1, z)).times(Mat4.rotation(rotAngle, 0, 1, 0));
             cows_states.push(new Cow(cow_transformed, x, 0, z, false, 0));
         }
         return cows_states;
@@ -512,7 +513,7 @@ export class MooBeam extends Scene {
                 this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
 
                 let dash_pos = -120 + 1.4; // -4.5 + 3.1
-                for (let k = 0; k < 7; k++) {
+                for (let k = 0; k < 6; k++) {
                     this.road_state = Mat4.identity()
                         .times(Mat4.translation(x_pos_road + 3.5, 0.02, dash_pos + 18.5))
                         .times(Mat4.scale(.075, this.world_size, 16.5 ))
@@ -552,7 +553,7 @@ export class MooBeam extends Scene {
                 this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
 
                 let dash_pos = -120 + 1.4; // -4.5 + 3.1
-                for (let k = 0; k < 7; k++) {
+                for (let k = 0; k < 6; k++) {
                     this.road_state = Mat4.identity()
                         .times(Mat4.translation(dash_pos + 18.5, 0.02, z_pos_road + 3.5))
                         .times(Mat4.scale(16.5, this.world_size, 0.075 ))
@@ -578,6 +579,49 @@ export class MooBeam extends Scene {
                     }
                     dash_pos += 5.9;
                 }
+            }
+
+            // corners of road
+            this.road_state = Mat4.identity().times(Mat4.translation(-122, .01, -122)).times(Mat4.scale(2, this.world_size, 2 )).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+            this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
+
+            this.road_state = Mat4.identity().times(Mat4.translation(122, .01, -122)).times(Mat4.scale(2, this.world_size, 2 )).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+            this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
+
+            this.road_state = Mat4.identity().times(Mat4.translation(-122, .01, 122)).times(Mat4.scale(2, this.world_size, 2 )).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+            this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
+
+            this.road_state = Mat4.identity().times(Mat4.translation(122, .01, 122)).times(Mat4.scale(2, this.world_size, 2 )).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+            this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
+
+            // borders for edges
+            this.road_state = Mat4.identity()
+                .times(Mat4.translation(-123.5, 0.02, 0))
+                .times(Mat4.scale(0.075, this.world_size, 123.5 ))
+                .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+            this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
+
+            this.road_state = Mat4.identity()
+                .times(Mat4.translation(123.5, 0.02, 0))
+                .times(Mat4.scale(0.075, this.world_size, 123.5 ))
+                .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+            this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
+
+            this.road_state = Mat4.identity()
+                .times(Mat4.translation(0, 0.02, -123.5))
+                .times(Mat4.scale(123.5, this.world_size, 0.075 ))
+                .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+            this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
+
+            this.road_state = Mat4.identity()
+                .times(Mat4.translation(0, 0.02, 123.5))
+                .times(Mat4.scale(123.5, this.world_size, 0.075 ))
+                .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+            this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
+
+            let roads = this.generateRoads();
+            for(let i = 0; i < roads.length; i++) {
+                this.shapes.road_long.draw(context, program_state, roads[i].transformation, roads[i].material);
             }
 
             // Draw cows
