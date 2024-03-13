@@ -64,6 +64,7 @@ export class MooBeam extends Scene {
             object: new defs.Subdivision_Sphere(4),
             ufo: new Shape_From_File("assets/Ufo.obj"),
             cow: new Shape_From_File("assets/cow.obj"),
+            lamp: new Shape_From_File("assets/lamp.obj"),
             sky: new defs.Subdivision_Sphere(4),
             floor: new Square(),
             road: new Square(),
