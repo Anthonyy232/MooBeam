@@ -93,7 +93,7 @@ export class MooBeam extends Scene {
         this.player = new Player(0, this.starting_location.y , 0);
         this.ufo_state = Mat4.identity();
         this.skyscrapper_height = 25;
-        this.skyscrapper_size = 10;
+        this.skyscrapper_size = 5;
         this.skyscraper_state = Mat4.identity()
             .times(Mat4.scale(this.skyscrapper_size, this.skyscrapper_height, this.skyscrapper_size))
             .times(Mat4.translation(0, 1, 0)); //translate it vertically so the base is at the floor height
@@ -102,7 +102,7 @@ export class MooBeam extends Scene {
 
         this.ufo_radius = 2;
         this.skyscraper_height = 25;
-        this.skyscraper_size = 10;
+        this.skyscraper_size = 5;
         this.skyscraper_transformation = Mat4.identity()
             .times(Mat4.scale(this.skyscraper_size, this.skyscraper_height, this.skyscraper_size))
         this.skyscrapers_count = 1;
@@ -438,23 +438,23 @@ export class MooBeam extends Scene {
             }
 
             // Draw roads
-            let x_pos_road = -this.world_size + 4;
-            for (let i = 0; i < 12; i++) {
-                x_pos_road = x_pos_road + 30;
+            let x_pos_road = -this.world_size + 40;
+            for (let i = 0; i < 7; i++) {
+                x_pos_road = x_pos_road + 40;
                 this.road_state = Mat4.identity()
                     .times(Mat4.translation(x_pos_road, .1, 0))
-                    .times(Mat4.scale(3, this.world_size, 166 ))
+                    .times(Mat4.scale(4, this.world_size, 120 ))
                     .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
 
                 this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
             }
 
-            let z_pos_road = -this.world_size + 4;
-            for (let i = 0; i < 12; i++) {
-                z_pos_road = z_pos_road + 30;
+            let z_pos_road = -this.world_size + 40;
+            for (let i = 0; i < 7; i++) {
+                z_pos_road = z_pos_road + 40;
                 this.road_state = Mat4.identity()
                     .times(Mat4.translation(0, .1, z_pos_road))
-                    .times(Mat4.scale(166, this.world_size, 3))
+                    .times(Mat4.scale(120, this.world_size, 4))
                     .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
 
                 this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
