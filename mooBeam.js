@@ -69,6 +69,7 @@ export class MooBeam extends Scene {
             cow: new Shape_From_File("assets/cow.obj"),
             sky: new defs.Subdivision_Sphere(4),
             floor: new Square(),
+            road: new Square(),
             skyscraper: new Cube(),
             road_long: new Square(),
             beam: new Rounded_Closed_Cone(2, 20, [[0, 5], [0, 1]]),
@@ -97,10 +98,14 @@ export class MooBeam extends Scene {
         this.world_size = 200;
         this.sky_state = Mat4.identity().times(Mat4.scale(this.world_size, this.world_size, this.world_size));
         this.floor_state = Mat4.identity().times(Mat4.scale(this.world_size, this.world_size, this.world_size)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+        this.road_state = Mat4.identity()
+            .times(Mat4.translation(0, 1, 0))
+            .times(Mat4.scale(5, this.world_size, this.world_size))
+            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
         this.player = new Player(0, this.starting_location.y , 0);
         this.ufo_state = Mat4.identity();
         this.skyscrapper_height = 25;
-        this.skyscrapper_size = 10;
+        this.skyscrapper_size = 5;
         this.skyscraper_state = Mat4.identity()
             .times(Mat4.scale(this.skyscrapper_size, this.skyscrapper_height, this.skyscrapper_size))
             .times(Mat4.translation(0, 1, 0)); //translate it vertically so the base is at the floor height
@@ -109,7 +114,7 @@ export class MooBeam extends Scene {
 
         this.ufo_radius = 2;
         this.skyscraper_height = 25;
-        this.skyscraper_size = 10;
+        this.skyscraper_size = 5;
         this.skyscraper_transformation = Mat4.identity()
             .times(Mat4.scale(this.skyscraper_size, this.skyscraper_height, this.skyscraper_size))
         this.road_transformation = Mat4.identity().times(Mat4.rotation(Math.PI/2, 1, 0, 0)).times(Mat4.scale(20, 10, 10));
@@ -118,6 +123,7 @@ export class MooBeam extends Scene {
         this.roads_count = 10;
 
         this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_transformation);
+        this.road_count = 20;
         this.camera_angle = 0;
         this.beam_height = 10;
         this.beam_size = 5;
@@ -149,6 +155,9 @@ export class MooBeam extends Scene {
             floor_material: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 0.4, diffusivity: 0.5, specularity: 0.5,
                 texture: new Texture("assets/floor.jpg")
+            }),
+            road_material: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#ffffff"), ambient: 1, diffusivity: 1, specularity: 1
             }),
             skyscraper_material: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 0.6, diffusivity: 0.5, specularity: 1,
@@ -438,8 +447,8 @@ export class MooBeam extends Scene {
                 let third_person = Mat4.inverse(Mat4.identity()
                     .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
                     .times(Mat4.rotation(this.camera_angle, 0, 1, 0))
-                    .times(Mat4.translation(0,5,13))
-                    .times(Mat4.rotation(-Math.PI / 8, 1, 0, 0 ))
+                    .times(Mat4.translation(0,12,30))
+                    .times(Mat4.rotation(-Math.PI / 6, 1, 0, 0 ))
                 )
                 let angle = Math.atan(1 / Math.sqrt(2));
                 let isometric = Mat4.inverse(Mat4.identity()
@@ -471,6 +480,29 @@ export class MooBeam extends Scene {
                 }
             }
 
+          /*
+            // Draw roads
+            let x_pos_road = -this.world_size + 40;
+            for (let i = 0; i < 7; i++) {
+                x_pos_road = x_pos_road + 40;
+                this.road_state = Mat4.identity()
+                    .times(Mat4.translation(x_pos_road, .1, 0))
+                    .times(Mat4.scale(4, this.world_size, 120 ))
+                    .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+                this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
+            }
+
+            let z_pos_road = -this.world_size + 40;
+            for (let i = 0; i < 7; i++) {
+                z_pos_road = z_pos_road + 40;
+                this.road_state = Mat4.identity()
+                    .times(Mat4.translation(0, .1, z_pos_road))
+                    .times(Mat4.scale(120, this.world_size, 4))
+                    .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+                this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
+                
             //draw roads
 
             let roads = [];
@@ -490,6 +522,7 @@ export class MooBeam extends Scene {
 
             for(let i = 0; i < roads_transforms.length; i++) {
                 this.shapes.road_long.draw(context, program_state, roads_transforms[i], roads_materials[i]);
+              */
             }
 
             // Draw cows
