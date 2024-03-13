@@ -40,6 +40,7 @@ class Cow {
         this.transformation = transformation;
         this.animate = animate;
         this.local_time = local_time;
+        this.angle = 0;
     }
 }
 
@@ -120,7 +121,7 @@ export class MooBeam extends Scene {
         this.camera_angle = 0;
         this.beam_height = 10;
         this.beam_size = 5;
-        this.cows_count = 30;
+        this.cows_count = 100;
         this.cow_size = 2;
         this.cows_states = this.generateCows(Mat4.identity());
         this.initial_camera_location = Mat4.look_at(vec3(0, 10 + this.starting_location.y, 20), vec3(0, this.starting_location.y, 0), vec3(0, 1 + this.starting_location.y, 0));
@@ -135,7 +136,7 @@ export class MooBeam extends Scene {
                 texture: new Texture("assets/ufo.jpg")
             }),
             shadow_material: new Material(new defs.Phong_Shader(1), {
-                color: hex_color("#000000", 0.97), ambient: 0.1, diffusivity: 0, specularity: 0,
+                color: hex_color("#000000", 0.95), ambient: 0.1, diffusivity: 0, specularity: 0,
             }),
             cow_material: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 0.7, diffusivity: 0.5, specularity: 0.5,
@@ -184,12 +185,12 @@ export class MooBeam extends Scene {
             let x = 0;
             let z = 0;
             while (inside) {
-                x = Math.random() * 100 - 50;
-                z = Math.random() * 100 - 50;
+                x = Math.random() * 300 - 150;
+                z = Math.random() * 300 - 150;
                 if (!this.cowInSkyscraper(x, z)) { inside = false; }
             }
             let cow_transformed = cow_transformation.times(Mat4.translation(x, 1, z));
-            cows_states.push(new Cow(cow_transformed, x, 0, z, false, 0));
+            cows_states.push(new Cow(cow_transformed, x, 0, z, false, 0, 0));
         }
         return cows_states;
     }
@@ -231,11 +232,35 @@ export class MooBeam extends Scene {
 
     hasEscapedBounds() { return Math.sqrt(this.player.x**2 + this.player.z**2) > this.world_size; }
 
+    /*
     animate_cow(i, program_state) {
+        let speed = 0.0008;
         let working_time = Math.min(program_state.animation_time - this.cows_states[i].local_time, 1500);
-        this.cows_states[i].transformation = this.cows_states[i].transformation.times(Mat4.translation(0, working_time * 0.01, 0));
-        this.cows_states[i].y = this.cows_states[i].y + (working_time * 0.01)
+        this.cows_states[i].transformation = this.cows_states[i].transformation.times(Mat4.translation(0, working_time * speed, 0));
+        this.cows_states[i].y = this.cows_states[i].y + (working_time * speed)
     }
+     */
+    animate_cow(i, program_state) {
+        let speed = 0.0008;
+        let cow_time = Math.min(program_state.animation_time - this.cows_states[i].local_time, 1500);
+        let angle = 0.1 * (90 * (this.cows_states[i].y / this.player.y)) * (Math.PI / 180);
+        let direction = {x: this.player.x - this.cows_states[i].x, y: this.player.y - this.cows_states[i].y, z: this.player.z - this.cows_states[i].z};
+        let length = Math.sqrt(direction.x * direction.x + direction.y * direction.y + direction.z * direction.z);
+        direction.x /= length;
+        direction.y /= length;
+        direction.z /= length;
+
+        this.cows_states[i].transformation = this.cows_states[i].transformation
+            .times(Mat4.translation(cow_time * speed * direction.x, cow_time * speed * direction.y, cow_time * speed * direction.z));
+        this.cows_states[i].x += cow_time * speed * direction.x;
+        this.cows_states[i].y += cow_time * speed * direction.y;
+        this.cows_states[i].z += cow_time * speed * direction.z;
+        if (this.cows_states[i].angle) {
+            this.cows_states[i].angle = this.cows_states[i].angle - angle;
+        } else { this.cows_states[i].angle = angle; }
+    }
+
+
 
     is_animating(program_state) {
         let cows_animating = [];
@@ -256,7 +281,7 @@ export class MooBeam extends Scene {
         if (this.cows_states) {
             for (let i = 0; i < this.cows_states.length; i++) {
                 let distance = (this.player.x - this.cows_states[i].x)**2 + (this.player.z - this.cows_states[i].z)**2
-                if (distance <= this.cow_size + this.beam_size + 23) {
+                if (distance <= this.cow_size + this.beam_size + 24) {
                     this.cows_states[i].animate = true;
                 }
             }
@@ -315,7 +340,6 @@ export class MooBeam extends Scene {
             let x_comp = Math.cos(this.camera_angle);
             let z_comp = Math.sin(this.camera_angle);
             this.player.velocity.z -= this.player.acceleration.z;
-            this.player.velocity.x -= this.player.acceleration.x;
             if (Math.abs(this.player.velocity.z) > this.player.max_speed) {
                 this.player.velocity.z = -this.player.max_speed;
             }
@@ -349,7 +373,6 @@ export class MooBeam extends Scene {
         if (!this.beaming) {
             let x_comp = Math.cos(this.camera_angle);
             let z_comp = Math.sin(this.camera_angle);
-
             this.player.velocity.x -= this.player.acceleration.x;
             if (Math.abs(this.player.velocity.x) > this.player.max_speed) {
                 this.player.velocity.x = -this.player.max_speed
@@ -367,7 +390,6 @@ export class MooBeam extends Scene {
         if (!this.beaming) {
             let x_comp = Math.cos(this.camera_angle);
             let z_comp = Math.sin(this.camera_angle);
-
             this.player.velocity.x += this.player.acceleration.x;
             if (Math.abs(this.player.velocity.x) > this.player.max_speed) {
                 this.player.velocity.x = this.player.max_speed
@@ -380,13 +402,9 @@ export class MooBeam extends Scene {
         }
     }
 
-    turn_left() {
-        this.camera_angle += Math.PI / 36;
-    }
+    turn_left() { this.camera_angle += Math.PI / 36; }
 
-    turn_right() {
-        this.camera_angle -= Math.PI / 36;
-    }
+    turn_right() { this.camera_angle -= Math.PI / 36; }
 
     display(context, program_state) {
         // Refresh the score and timer HTML elements
@@ -412,7 +430,7 @@ export class MooBeam extends Scene {
                 .times(Mat4.rotation(time / 2.5, 0 , 1, 0))
 
             let shadow_state = Mat4.identity()
-                .times(Mat4.translation(this.player.x, 0.01, this.player.z))
+                .times(Mat4.translation(this.player.x, 0.02, this.player.z))
                 .times(Mat4.scale(this.beam_size, this.beam_size, this.beam_size))
                 .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
 
@@ -479,16 +497,15 @@ export class MooBeam extends Scene {
             if (cows_animating) {
                 for (let i = 0; i < cows_animating.length; i++) {
                     this.animate_cow(cows_animating[i], program_state)
-                    if (this.cows_states[cows_animating[i]].y >= this.player.y) {
+                    if (this.cows_states[cows_animating[i]].y >= this.player.y-3) {
                         this.cows_states = this.cows_states.filter(item => item !== this.cows_states[cows_animating[i]]);
                         this.score += 50;
                         this.show_beam = false;
                     }
                 }
             } else { this.show_beam = this.beaming = false; }
-            console.log(this.cows_states.length)
             for(let i = 0; i < this.cows_states.length; i++) {
-                this.shapes.cow.draw(context, program_state, this.cows_states[i].transformation, this.materials.cow_material);
+                this.shapes.cow.draw(context, program_state, this.cows_states[i].transformation.times(Mat4.rotation(this.cows_states[i].angle, 0, 1, 1)), this.materials.cow_material);
             }
 
             // Draw light beam conditionally
