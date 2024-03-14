@@ -20,20 +20,25 @@
         }
         .left {left: 10px;}
         .right {right: 10px;}
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
+
 <body style="background: #ACBFA4">
 <div class="canvas-widget" id="main-canvas">
-    <div class="top-corner left">Score |  <span id="score">0</span></div>
-    <div class="top-corner right">Time |  <span id="timer">1:30</span></div>
+    <div class="top-corner left" style="background-color: rgba(51, 51, 51, 0.5);">Score |  <span id="score">0</span></div>
+    <div class="top-corner right" style="background-color: rgba(51, 51, 51, 0.5);">Time |  <span id="timer">1:30</span></div>
 </div>
 
-    <script type=module>
-        // ********************* THE ENTRY POINT OF YOUR WHOLE PROGRAM STARTS HERE *********************
-        const element_to_replace = document.querySelector("#main-canvas");
-        import {Main_Scene, Additional_Scenes, Canvas_Widget} from './main-scene.js';
-        const scenes = [Main_Scene, ...Additional_Scenes].map(scene => new scene());
-        new Canvas_Widget(element_to_replace, scenes);
-    </script>
+
+<script type=module>
+    // ********************* THE ENTRY POINT OF YOUR WHOLE PROGRAM STARTS HERE *********************
+    const element_to_replace = document.querySelector("#main-canvas");
+    import {Main_Scene, Additional_Scenes, Canvas_Widget} from './main-scene.js';
+    const scenes = [Main_Scene, ...Additional_Scenes].map(scene => new scene());
+    new Canvas_Widget(element_to_replace, scenes);
+</script>
 </body>
 </html>

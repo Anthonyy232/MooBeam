@@ -2,7 +2,6 @@ import {defs, tiny} from './examples/common.js';
 import { Shape_From_File } from './examples/obj-file-demo.js';
 const score_html = document.querySelector('#score')
 const time_html = document.querySelector('#timer')
-//potentially add a boolean to display "move to start game"
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Texture, Material, Scene,
@@ -98,6 +97,7 @@ export class MooBeam extends Scene {
         this.camera_left = false;
         this.behind_view = true;
         this.stored_angle = 0;
+        this.crash = false;
 
         // Decrement the time every second
         let timer = setInterval(() => {
@@ -139,6 +139,7 @@ export class MooBeam extends Scene {
         this.cows_states = this.generateCows();
         this.initial_camera_location = Mat4.look_at(vec3(0, 10 + this.starting_location.y, 20), vec3(0, this.starting_location.y, 0), vec3(0, 1 + this.starting_location.y, 0));
         this.final_local_time = 0;
+
         // *** Materials
         this.materials = {
             light_material: new Material(new defs.Fake_Bump_Map(1), {
@@ -176,14 +177,6 @@ export class MooBeam extends Scene {
             building_material: new Material(new defs.Phong_Shader(), {
                 color: hex_color("#ffffff"), ambient: 0.6, diffusivity: 0.5, specularity: 1,
             }),
-            road1_material: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#000000"), ambient: 0.6, diffusivity: 1, specularity: 0.9,
-                texture: new Texture("assets/road_crosswalk.jpg")
-            }),
-            road2_material: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#000000"), ambient: 0.6, diffusivity: 1, specularity: 0.9,
-                texture: new Texture("assets/road.jpg")
-            })
         }
     }
     generateSkyscrapers(skyscraper_transformation, num_skyscrapers = this.skyscrapers_count) {
@@ -436,7 +429,6 @@ export class MooBeam extends Scene {
     
     make_control_panel(program_state) {
         document.addEventListener('click', (event) => {
-            console.log('click');
             if (!this.beaming) {
                 this.show_beam = true;
                 this.check_cow_within_shadow()
@@ -533,6 +525,7 @@ export class MooBeam extends Scene {
         this.camera_left = false;
         this.behind_view = true;
         this.stored_angle = 0;
+        this.crash = false;
     }
 
     move_forward() {
@@ -610,8 +603,8 @@ export class MooBeam extends Scene {
 
     display(context, program_state) {
         // Refresh the score and timer HTML elements
-        score_html.innerHTML = this.score.toString()
-        time_html.innerHTML = format_time(this.time)
+        score_html.innerHTML = this.score.toString();
+        time_html.innerHTML = format_time(this.time);
 
         if (!this.begin_game) {
             program_state.set_camera(this.initial_camera_location);
@@ -690,6 +683,7 @@ export class MooBeam extends Scene {
         for (let i = 0; i < this.skyscrapers_states.length; i++) {
             this.shapes.skyscraper.draw(context, program_state, this.skyscrapers_states[i].transformation, this.materials.skyscraper_material);
             if (this.hasPlayerCollided(i)) {
+                this.crash = true;
                 this.end_game = true;
             }
         }
@@ -698,6 +692,7 @@ export class MooBeam extends Scene {
         for (let i = 0; i < this.buildings_states.length; i++) {
             this.shapes.building.draw(context, program_state, this.buildings_states[i].transformation, this.materials.building_material);
             if (this.hasPlayerCollided(i)) {
+                this.crash = true;
                 this.end_game = true;
             }
         }
