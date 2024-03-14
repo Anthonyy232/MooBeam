@@ -6,7 +6,7 @@ const show_end = document.getElementById('end-game');
 const show_message = document.getElementById('score');
 
 export function displayEnd(crashed, score) {
-    show_end.style.display = 'flex';
+    show_end.style.display = 'block';
     if (crashed) {
         show_message.textContent = "You crashed! Score: " + score
     } else {
@@ -78,7 +78,7 @@ export class MooBeam extends Scene {
         super();
         this.shapes = {
             object: new defs.Subdivision_Sphere(4),
-            ufo: new Shape_From_File("assets/Ufo.obj"),
+            ufo: new Shape_From_File("assets/ufo.obj"),
             cow: new Shape_From_File("assets/cow.obj"),
             lamp: new Shape_From_File("assets/lamp.obj"),
             bench: new Shape_From_File("assets/bench.obj"),
@@ -92,6 +92,7 @@ export class MooBeam extends Scene {
         };
         this.shapes.skyscraper.arrays.texture_coord.forEach(p => p.scale_by(3));
         this.shapes.building.arrays.texture_coord.forEach(p => p.scale_by(1));
+        this.shapes.floor.arrays.texture_coord.forEach(p => p.scale_by(15));
 
         this.starting_location = new Player(0, 20, 0, 0, 0, 0)
         this.begin_game = false;
@@ -196,7 +197,7 @@ export class MooBeam extends Scene {
             }),
             floor_material: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 0.7, diffusivity: 0.1, specularity: 0,
-                texture: new Texture("assets/grass.jpg")
+                texture: new Texture("assets/grass2.png")
             }),
             road_material: new Material(new defs.Phong_Shader(), {
                 color: hex_color("#454545"), ambient: 1, diffusivity: 1, specularity: 1
@@ -951,6 +952,7 @@ export class MooBeam extends Scene {
                 this.shapes.cow.draw(context, program_state, transformation, this.materials.cow_material);
             }
         }
+
 
         // Draw light beam conditionally
         if (this.show_beam) {
