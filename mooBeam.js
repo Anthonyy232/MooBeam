@@ -450,22 +450,22 @@ export class MooBeam extends Scene {
             this.camera_angle = this.stored_angle;
         });
 
-        this.key_triggered_button("Move forward", ["i"], this.move_forward, "#6E6460", () => {
+        this.key_triggered_button("Move forward", ["w"], this.move_forward, "#6E6460", () => {
             this.player.velocity.x = 0;
             this.player.velocity.z = 0;
             this.up = false;
         });
-        this.key_triggered_button("Move backward", ["k"], this.move_backward, "#6E6460", () => {
+        this.key_triggered_button("Move backward", ["s"], this.move_backward, "#6E6460", () => {
             this.player.velocity.x = 0;
             this.player.velocity.z = 0;
             this.down = false;
         });
-        this.key_triggered_button("Move left", ["j"], this.move_left, "#6E6460", () => {
+        this.key_triggered_button("Move left", ["a"], this.move_left, "#6E6460", () => {
             this.player.velocity.x = 0;
             this.player.velocity.z = 0;
             this.left = false;
         });
-        this.key_triggered_button("Move right", ["l"], this.move_right, "#6E6460", () => {
+        this.key_triggered_button("Move right", ["d"], this.move_right, "#6E6460", () => {
             this.player.velocity.x = 0;
             this.player.velocity.z = 0;
             this.right = false;
