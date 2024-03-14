@@ -341,7 +341,21 @@ export class MooBeam extends Scene {
         }
     }
 
+    
     make_control_panel(program_state) {
+        document.addEventListener('click', (event) => {
+            console.log('click');
+            if (!this.beaming) {
+                this.show_beam = true;
+                this.check_cow_within_shadow()
+            }
+            if (this.show_beam) {
+                setTimeout(() => {
+                    this.show_beam = false;
+                    this.beaming = false;
+                }, 1000);
+            }
+        });
         this.key_triggered_button("Top View", ["Control", "0"], () => {
             this.behind_view = false;
             this.camera_angle = 0;
@@ -385,7 +399,7 @@ export class MooBeam extends Scene {
                 }, 1000);
             }
         });
-        this.key_triggered_button("", ["mousedown"], () => {
+        this.key_triggered_button("Beam Cows", ["click"], () => {
             if (!this.beaming) {
                 this.show_beam = true;
                 this.check_cow_within_shadow()
