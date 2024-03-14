@@ -62,6 +62,10 @@ function format_time(time) {
     return `${minutes_digits}:${seconds_digits.toString().padStart(2, '0')}`;
 }
 
+function getRandomInt(max) {
+    return Math.floor(Math.random() * max);
+}
+
 export class MooBeam extends Scene {
     constructor() {
         super();
@@ -80,7 +84,7 @@ export class MooBeam extends Scene {
             shadow: new defs.Regular_2D_Polygon(2, 20)
         };
         this.shapes.skyscraper.arrays.texture_coord.forEach(p => p.scale_by(3));
-        this.shapes.building.arrays.texture_coord.forEach(p => p.scale_by(3));
+        this.shapes.building.arrays.texture_coord.forEach(p => p.scale_by(1));
 
         this.starting_location = new Player(0, 20, 0, 0, 0, 0)
         this.begin_game = false;
@@ -119,18 +123,40 @@ export class MooBeam extends Scene {
         this.player = new Player(0, this.starting_location.y , 0);
         this.ufo_state = Mat4.identity();
         this.ufo_radius = 2;
-        this.skyscraper_height = 25;
+        this.skyscraper_height = 5; // skyscraper_height = desired_skyscraper_height * 1/skyscraper_size
         this.skyscraper_size = 5;
         this.skyscraper_transformation = Mat4.identity()
             .times(Mat4.scale(this.skyscraper_size, this.skyscraper_height, this.skyscraper_size))
-        this.skyscrapers_count = 120;
+        this.skyscrapers_count = 85; // do not set to higher than 144
         this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_transformation);
-        this.building_height = 5;
+
+        this.skyscrapers_heights = [];
+        for (let i = 0; i < this.skyscrapers_count; i++) {
+            this.skyscrapers_heights[i] = - 5 - Math.random() * 9;
+        }
+
+        this.skyscrapers_materials = [];
+        for (let i = 0; i < this.skyscrapers_count; i++) {
+            this.skyscrapers_materials[i] = getRandomInt(3);
+        }
+
+        this.building_height = 7.5;
         this.building_size = 4.95;
         this.building_transformation = Mat4.identity()
             .times(Mat4.scale(this.building_size, this.building_height, this.building_size))
-        this.buildings_count = 120;
+        this.buildings_count = 85; // do not set to higher than 144
         this.buildings_states = this.generateBuildings(this.building_transformation);
+
+        this.buildings_heights = [];
+        for (let i = 0; i < this.buildings_count; i++) {
+            this.buildings_heights[i] = 8 - Math.random() * 7;
+        }
+
+        this.buildings_materials = [];
+        for (let i = 0; i < this.buildings_count; i++) {
+            this.buildings_materials[i] = getRandomInt(2);
+        }
+
         this.camera_angle = 0;
         this.beam_height = 10;
         this.beam_size = 5;
@@ -145,7 +171,7 @@ export class MooBeam extends Scene {
                 color: hex_color("#FFFF00", 0.5), ambient: 0.7, diffusivity: 0.5, specularity: 0
             }),
             ufo_material: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#000000"), ambient: 0.2, diffusivity: 0.5, specularity: 1,
+                color: hex_color("#aeb2b8"), ambient: .4, diffusivity: 0.1, specularity: 1.5,
                 texture: new Texture("assets/ufo.jpg")
             }),
             shadow_material: new Material(new defs.Phong_Shader(1), {
@@ -160,7 +186,7 @@ export class MooBeam extends Scene {
                 texture: new Texture("assets/skybox.jpg")
             }),
             floor_material: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#000000"), ambient: 0.4, diffusivity: 0.5, specularity: 0.5,
+                color: hex_color("#00FF00"), ambient: 0.7, diffusivity: 0.5, specularity: 0,
                 texture: new Texture("assets/floor.jpg")
             }),
             road_material: new Material(new defs.Phong_Shader(), {
@@ -169,71 +195,85 @@ export class MooBeam extends Scene {
             dash_material: new Material(new defs.Phong_Shader(), {
                 color: hex_color("#ffffff"), ambient: 1, diffusivity: 1, specularity: 1
             }),
-            skyscraper_material: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#000000"), ambient: 0.6, diffusivity: 0.5, specularity: 1,
-                texture: new Texture("assets/skyscraper.png")
+            skyscraper_material1: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#000000"), ambient: 1, diffusivity: 1, specularity: 1,
+                texture: new Texture("assets/skyscraper1.png")
             }),
-            building_material: new Material(new defs.Phong_Shader(), {
-                color: hex_color("#ffffff"), ambient: 0.6, diffusivity: 0.5, specularity: 1,
+            skyscraper_material2: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#000000"), ambient: 1, diffusivity: 1, specularity: 1,
+                texture: new Texture("assets/skyscraper2.png")
             }),
-            road1_material: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#000000"), ambient: 0.6, diffusivity: 1, specularity: 0.9,
-                texture: new Texture("assets/road_crosswalk.jpg")
+            skyscraper_material3: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#000000"), ambient: 1, diffusivity: 1, specularity: 1,
+                texture: new Texture("assets/skyscraper3.png")
             }),
-            road2_material: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#000000"), ambient: 0.6, diffusivity: 1, specularity: 0.9,
-                texture: new Texture("assets/road.jpg")
+            building_material1: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#36454F"), ambient: 0.6, diffusivity: 0.5, specularity: 1,
+                texture: new Texture("assets/skyscraper4.png")
+            }),
+            building_material2: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#36454F"), ambient: 0.6, diffusivity: 0.5, specularity: 1,
+                texture: new Texture("assets/skyscraper5.png")
             })
         }
     }
+
+
     generateSkyscrapers(skyscraper_transformation, num_skyscrapers = this.skyscrapers_count) {
         function getRandomInt(max) {
             return Math.floor(Math.random() * max);
         }
 
         let skyscrapers_states = [];
+        let coordinates_set = new Set();
+
         for (let i = 0; i < num_skyscrapers; i++) {
-            let x = 40 * getRandomInt(3);
-            let z = 40 * getRandomInt(3);
+            let x, z;
+            do {
+                x = 40 * getRandomInt(3);
+                z = 40 * getRandomInt(3);
 
-            switch (getRandomInt(2)) {
-                case 0:
-                    x += 11;
-                    break;
-                case 1:
-                    x += 29;
-                    break;
-            }
-            switch (getRandomInt(2)) {
-                case 0:
-                    z += 11;
-                    break;
-                case 1:
-                    z += 29;
-                    break;
-            }
+                switch (getRandomInt(2)) {
+                    case 0:
+                        x += 11;
+                        break;
+                    case 1:
+                        x += 29;
+                        break;
+                }
+                switch (getRandomInt(2)) {
+                    case 0:
+                        z += 11;
+                        break;
+                    case 1:
+                        z += 29;
+                        break;
+                }
 
-            switch (getRandomInt(4)) {
-                case 0:
-                    break;
-                case 1:
-                    x = -x;
-                    break;
-                case 2:
-                    z = -z;
-                    break;
-                case 3:
-                    x = -x;
-                    z = -z;
-                    break;
-            }
+                switch (getRandomInt(4)) {
+                    case 0:
+                        break;
+                    case 1:
+                        x = -x;
+                        break;
+                    case 2:
+                        z = -z;
+                        break;
+                    case 3:
+                        x = -x;
+                        z = -z;
+                        break;
+                }
+            } while (coordinates_set.has(`${x},${z}`));
+
+            coordinates_set.add(`${x},${z}`);
 
             let skyscraper_transformed = skyscraper_transformation.times(Mat4.translation(x/this.skyscraper_size, 1, z/this.skyscraper_size));
             skyscrapers_states.push(new Skyscraper(skyscraper_transformed, x, 0, z));
-
         }
         return skyscrapers_states;
     }
+
 
     generateBuildings(building_transformation, num_buildings = this.buildings_count) {
         function getRandomInt(max) {
@@ -241,45 +281,51 @@ export class MooBeam extends Scene {
         }
 
         let buildings_states = [];
+        let coordinates_set = new Set();
+
         for (let i = 0; i < num_buildings; i++) {
-            let x = 40 * getRandomInt(3);
-            let z = 40 * getRandomInt(3);
+            let x, z;
+            do {
+                x = 40 * getRandomInt(3);
+                z = 40 * getRandomInt(3);
 
-            switch (getRandomInt(2)) {
-                case 0:
-                    x += 11;
-                    break;
-                case 1:
-                    x += 29;
-                    break;
-            }
-            switch (getRandomInt(2)) {
-                case 0:
-                    z += 11;
-                    break;
-                case 1:
-                    z += 29;
-                    break;
-            }
+                switch (getRandomInt(2)) {
+                    case 0:
+                        x += 11;
+                        break;
+                    case 1:
+                        x += 29;
+                        break;
+                }
+                switch (getRandomInt(2)) {
+                    case 0:
+                        z += 11;
+                        break;
+                    case 1:
+                        z += 29;
+                        break;
+                }
 
-            switch (getRandomInt(4)) {
-                case 0:
-                    break;
-                case 1:
-                    x = -x;
-                    break;
-                case 2:
-                    z = -z;
-                    break;
-                case 3:
-                    x = -x;
-                    z = -z;
-                    break;
-            }
+                switch (getRandomInt(4)) {
+                    case 0:
+                        break;
+                    case 1:
+                        x = -x;
+                        break;
+                    case 2:
+                        z = -z;
+                        break;
+                    case 3:
+                        x = -x;
+                        z = -z;
+                        break;
+                }
+            } while (coordinates_set.has(`${x},${z}`));
+
+            coordinates_set.add(`${x},${z}`);
 
             let building_transformed = building_transformation.times(Mat4.translation(x/this.building_size, 1, z/this.building_size));
             buildings_states.push(new Building(building_transformed, x, 0, z));
-
         }
         return buildings_states;
     }
@@ -679,8 +725,14 @@ export class MooBeam extends Scene {
         // The parameters of the Light are: position, color, size
         let light_color = this.show_beam ? color(1.0, 1.0, 0.5, 1) : color(0.33, 0.61, 0.50, 1)
         let light_strength = this.show_beam ? 100000 : 700
-        program_state.lights = [new Light(
-            Mat4.rotation(time / 300, this.player.x, this.player.y, this.player.z).times(vec4(3, 2, 10, 1)), light_color, light_strength)];
+
+        let light_position = Mat4.identity()
+            .times(Mat4.rotation(time / 300, 1, 0, 0))
+            .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
+            .times(vec4(3, 2, 10, 1));
+
+        program_state.lights = [new Light(light_position, light_color, light_strength)];
+
 
         this.shapes.ufo.draw(context, program_state, this.ufo_state, this.materials.ufo_material);
         this.shapes.sky.draw(context, program_state, this.sky_state, this.materials.skybox);
@@ -688,7 +740,21 @@ export class MooBeam extends Scene {
 
         // Draw skyscrapper
         for (let i = 0; i < this.skyscrapers_states.length; i++) {
-            this.shapes.skyscraper.draw(context, program_state, this.skyscrapers_states[i].transformation, this.materials.skyscraper_material);
+            this.skyscrapers_states[i].transformation[1][3] = this.skyscrapers_heights[i];
+            for (let j = 0; j < this.skyscraper_height - 2; j++) {
+                this.skyscrapers_states[i].transformation[1][3] += this.skyscraper_height + 5;
+                switch (this.skyscrapers_materials[i]) {
+                    case 0:
+                        this.shapes.skyscraper.draw(context, program_state, this.skyscrapers_states[i].transformation, this.materials.skyscraper_material1);
+                        break;
+                    case 1:
+                        this.shapes.skyscraper.draw(context, program_state, this.skyscrapers_states[i].transformation, this.materials.skyscraper_material2);
+                        break;
+                    case 2:
+                        this.shapes.skyscraper.draw(context, program_state, this.skyscrapers_states[i].transformation, this.materials.skyscraper_material3);
+                        break;
+                }
+            }
             if (this.hasPlayerCollided(i)) {
                 this.end_game = true;
             }
@@ -696,9 +762,14 @@ export class MooBeam extends Scene {
 
         // Draw buildings
         for (let i = 0; i < this.buildings_states.length; i++) {
-            this.shapes.building.draw(context, program_state, this.buildings_states[i].transformation, this.materials.building_material);
-            if (this.hasPlayerCollided(i)) {
-                this.end_game = true;
+            this.buildings_states[i].transformation[1][3] = this.buildings_heights[i];
+            switch (this.buildings_materials[i]) {
+                case 0:
+                    this.shapes.building.draw(context, program_state, this.buildings_states[i].transformation, this.materials.building_material1);
+                    break;
+                case 1:
+                    this.shapes.building.draw(context, program_state, this.buildings_states[i].transformation, this.materials.building_material2);
+                    break;
             }
         }
 
