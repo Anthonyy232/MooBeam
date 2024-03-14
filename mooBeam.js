@@ -2,6 +2,17 @@ import {defs, tiny} from './examples/common.js';
 import { Shape_From_File } from './examples/obj-file-demo.js';
 const score_html = document.querySelector('#score')
 const time_html = document.querySelector('#timer')
+const show_end = document.getElementById('end-game');
+const show_message = document.getElementById('score');
+
+export function displayEnd(crashed, score) {
+    show_end.style.display = 'flex';
+    if (crashed) {
+        show_message.textContent = "You crashed! Score: " + score
+    } else {
+        show_message.textContent = "You won! Score: " + score
+    }
+}
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Texture, Material, Scene,
@@ -80,7 +91,7 @@ export class MooBeam extends Scene {
             skyscraper: new Cube(),
             building: new Cube(),
             beam: new Rounded_Closed_Cone(2, 20, [[0, 5], [0, 1]]),
-            shadow: new defs.Regular_2D_Polygon(2, 20)
+            shadow: new defs.Regular_2D_Polygon(2, 20),
         };
         this.shapes.skyscraper.arrays.texture_coord.forEach(p => p.scale_by(3));
         this.shapes.building.arrays.texture_coord.forEach(p => p.scale_by(1));
@@ -693,8 +704,14 @@ export class MooBeam extends Scene {
 
         // Movement system
         if (this.end_game) {
-            this.behind_view = false;
-            this.animate_ufo_crash(program_state);
+            if (this.crash) {
+                displayEnd(true, this.score)
+                this.behind_view = false;
+                this.animate_ufo_crash(program_state);
+            } else {
+                displayEnd(false, this.score)
+            }
+
         } else {
             if (this.behind_view) {
                 this.stored_angle = this.camera_angle

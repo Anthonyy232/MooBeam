@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="En">
-<head >
+<head>
     <meta charset="UTF-8"/>
     <link href="assets/fav.ico" rel="icon">
     <title>MooBeam</title>
@@ -9,7 +9,9 @@
         body {
             font-family: 'Roboto', sans-serif;
         }
-        .canvas-widget {position: relative;}
+        .canvas-widget {
+            position: relative;
+        }
         .top-corner {
             position: absolute;
             top: 10px;
@@ -20,6 +22,7 @@
         }
         .left {left: 10px;}
         .right {right: 10px;}
+        .middle_hor {right: 510px;}
     </style>
 </head>
 
@@ -27,6 +30,11 @@
 <div class="canvas-widget" id="main-canvas">
     <div class="top-corner left" style="background-color: rgba(51, 51, 51, 0.5);">Score |  <span id="score">0</span></div>
     <div class="top-corner right" style="background-color: rgba(51, 51, 51, 0.5);">Time |  <span id="timer">1:30</span></div>
+    <div class="top-corner middle_hor" style="background-color: rgba(51, 51, 51, 0.5);">Time</div>
+</div>
+
+<div class="top-corner right" id="end-game" style="display: none;">
+    <h1 id="show-message"></h1>
 </div>
 
 
