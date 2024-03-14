@@ -197,8 +197,8 @@ export class MooBeam extends Scene {
                 color: hex_color("#ffffff"), ambient: 1, diffusivity: 1, specularity: 1
             }),
             skyscraper_material1: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#000000"), ambient: 1, diffusivity: 1, specularity: 1,
-                texture: new Texture("assets/skyscraper1.png")
+                color: hex_color("#000000"), ambient: 0.7, diffusivity: 1, specularity: 1,
+                texture: new Texture("assets/skyscraper1.jpg")
             }),
             skyscraper_material2: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 1, diffusivity: 1, specularity: 1,
@@ -691,11 +691,11 @@ export class MooBeam extends Scene {
 
         const time = program_state.animation_time / 1000
 
+        // Movement system
         if (this.end_game) {
             this.behind_view = false;
             this.animate_ufo_crash(program_state);
-        } else
-        {
+        } else {
             if (this.behind_view) {
                 this.stored_angle = this.camera_angle
             }
@@ -717,7 +717,6 @@ export class MooBeam extends Scene {
                     this.player.x += this.player.velocity.z * z_comp;
                 }
             }
-
             this.final_local_time = time;
             this.ufo_state = Mat4.identity()
                 .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
@@ -725,26 +724,25 @@ export class MooBeam extends Scene {
                 .times(Mat4.rotation(time / 2.5, 0, 1, 0))
         }
 
+        // Shadow under UFO
         let shadow_state = Mat4.identity()
             .times(Mat4.translation(this.player.x, 0.03, this.player.z))
             .times(Mat4.scale(this.beam_size, this.beam_size, this.beam_size))
             .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
 
-        if (true) { // For testing purposes set to false so the camera can fly around
-            let behind = Mat4.inverse(Mat4.identity()
-                .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
-                .times(Mat4.rotation(this.camera_angle, 0, 1, 0))
-                .times(Mat4.translation(0, 12, 30))
-                .times(Mat4.rotation(-Math.PI / 6, 1, 0, 0))
-            )
-            let top = Mat4.inverse(Mat4.identity()
-                .times(Mat4.translation(this.player.x, this.player.y+60, this.player.z))
-                .times(Mat4.rotation(-Math.PI / 2, 1, 0, 0))
-            );
-
-            this.desired = this.behind_view ? behind : top
-            program_state.set_camera(this.desired);
-        }
+        // Camera system
+        let behind = Mat4.inverse(Mat4.identity()
+            .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
+            .times(Mat4.rotation(this.camera_angle, 0, 1, 0))
+            .times(Mat4.translation(0, 12, 30))
+            .times(Mat4.rotation(-Math.PI / 6, 1, 0, 0))
+        )
+        let top = Mat4.inverse(Mat4.identity()
+            .times(Mat4.translation(this.player.x, this.player.y + 60, this.player.z))
+            .times(Mat4.rotation(-Math.PI / 2, 1, 0, 0))
+        );
+        this.desired = this.behind_view ? behind : top
+        program_state.set_camera(this.desired);
 
         // The parameters of the Light are: position, color, size
         let light_color = this.show_beam ? color(1.0, 1.0, 0.5, 1) : color(0.33, 0.61, 0.50, 1)
@@ -762,7 +760,7 @@ export class MooBeam extends Scene {
         this.shapes.sky.draw(context, program_state, this.sky_state, this.materials.skybox);
         this.shapes.floor.draw(context, program_state, this.floor_state, this.materials.floor_material);
 
-        // Draw skyscrapper
+        // Draw skyscraper
         for (let i = 0; i < this.skyscrapers_states.length; i++) {
             this.skyscrapers_states[i].transformation[1][3] = this.skyscrapers_heights[i];
             for (let j = 0; j < this.skyscraper_height - 2; j++) {
@@ -795,10 +793,6 @@ export class MooBeam extends Scene {
                 case 1:
                     this.shapes.building.draw(context, program_state, this.buildings_states[i].transformation, this.materials.building_material2);
                     break;
-            this.shapes.building.draw(context, program_state, this.buildings_states[i].transformation, this.materials.building_material);
-            if (this.hasPlayerCollided(i)) {
-                this.crash = true;
-                this.end_game = true;
             }
         }
 
@@ -808,7 +802,7 @@ export class MooBeam extends Scene {
             x_pos_road = x_pos_road + 40;
             this.road_state = Mat4.identity()
                 .times(Mat4.translation(x_pos_road, 0.01, 0))
-                .times(Mat4.scale(4, this.world_size, 120 ))
+                .times(Mat4.scale(4, this.world_size, 120))
                 .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
 
             this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
@@ -817,31 +811,29 @@ export class MooBeam extends Scene {
             for (let k = 0; k < 6; k++) {
                 this.road_state = Mat4.identity()
                     .times(Mat4.translation(x_pos_road + 3.5, 0.02, dash_pos + 18.5))
-                    .times(Mat4.scale(.075, this.world_size, 16.5 ))
+                    .times(Mat4.scale(.075, this.world_size, 16.5))
                     .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
 
                 this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
 
                 this.road_state = Mat4.identity()
                     .times(Mat4.translation(x_pos_road - 3.5, 0.02, dash_pos + 18.5))
-                    .times(Mat4.scale(.075, this.world_size, 16.5 ))
+                    .times(Mat4.scale(.075, this.world_size, 16.5))
                     .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
 
                 this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
 
-                for (let j = 0; j < 11; j++ ) {
+                for (let j = 0; j < 11; j++) {
                     dash_pos += 3.1;
                     this.road_state = Mat4.identity()
                         .times(Mat4.translation(x_pos_road, 0.02, dash_pos))
-                        .times(Mat4.scale(.2, this.world_size, .5 ))
+                        .times(Mat4.scale(.2, this.world_size, .5))
                         .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
 
                     this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
                 }
-
                 dash_pos += 5.9;
             }
-
         }
 
         let z_pos_road = -this.world_size + 40;
@@ -857,23 +849,23 @@ export class MooBeam extends Scene {
             for (let k = 0; k < 6; k++) {
                 this.road_state = Mat4.identity()
                     .times(Mat4.translation(dash_pos + 18.5, 0.02, z_pos_road + 3.5))
-                    .times(Mat4.scale(16.5, this.world_size, 0.075 ))
+                    .times(Mat4.scale(16.5, this.world_size, 0.075))
                     .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
 
                 this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
 
                 this.road_state = Mat4.identity()
                     .times(Mat4.translation(dash_pos + 18.5, 0.02, z_pos_road - 3.5))
-                    .times(Mat4.scale(16.5, this.world_size, 0.075 ))
+                    .times(Mat4.scale(16.5, this.world_size, 0.075))
                     .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
 
                 this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
 
-                for (let j = 0; j < 11; j++ ) {
+                for (let j = 0; j < 11; j++) {
                     dash_pos += 3.1;
                     this.road_state = Mat4.identity()
                         .times(Mat4.translation(dash_pos, 0.02, z_pos_road))
-                        .times(Mat4.scale(.5, this.world_size, .2 ))
+                        .times(Mat4.scale(.5, this.world_size, .2))
                         .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
 
                     this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
@@ -883,40 +875,40 @@ export class MooBeam extends Scene {
         }
 
         // corners of road
-        this.road_state = Mat4.identity().times(Mat4.translation(-122, .01, -122)).times(Mat4.scale(2, this.world_size, 2 )).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+        this.road_state = Mat4.identity().times(Mat4.translation(-122, .01, -122)).times(Mat4.scale(2, this.world_size, 2)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
         this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
 
-        this.road_state = Mat4.identity().times(Mat4.translation(122, .01, -122)).times(Mat4.scale(2, this.world_size, 2 )).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+        this.road_state = Mat4.identity().times(Mat4.translation(122, .01, -122)).times(Mat4.scale(2, this.world_size, 2)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
         this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
 
-        this.road_state = Mat4.identity().times(Mat4.translation(-122, .01, 122)).times(Mat4.scale(2, this.world_size, 2 )).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+        this.road_state = Mat4.identity().times(Mat4.translation(-122, .01, 122)).times(Mat4.scale(2, this.world_size, 2)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
         this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
 
-        this.road_state = Mat4.identity().times(Mat4.translation(122, .01, 122)).times(Mat4.scale(2, this.world_size, 2 )).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+        this.road_state = Mat4.identity().times(Mat4.translation(122, .01, 122)).times(Mat4.scale(2, this.world_size, 2)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
         this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
 
         // borders for edges
         this.road_state = Mat4.identity()
             .times(Mat4.translation(-123.5, 0.02, 0))
-            .times(Mat4.scale(0.075, this.world_size, 123.5 ))
+            .times(Mat4.scale(0.075, this.world_size, 123.5))
             .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
         this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
 
         this.road_state = Mat4.identity()
             .times(Mat4.translation(123.5, 0.02, 0))
-            .times(Mat4.scale(0.075, this.world_size, 123.5 ))
+            .times(Mat4.scale(0.075, this.world_size, 123.5))
             .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
         this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
 
         this.road_state = Mat4.identity()
             .times(Mat4.translation(0, 0.02, -123.5))
-            .times(Mat4.scale(123.5, this.world_size, 0.075 ))
+            .times(Mat4.scale(123.5, this.world_size, 0.075))
             .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
         this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
 
         this.road_state = Mat4.identity()
             .times(Mat4.translation(0, 0.02, 123.5))
-            .times(Mat4.scale(123.5, this.world_size, 0.075 ))
+            .times(Mat4.scale(123.5, this.world_size, 0.075))
             .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
         this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
 
