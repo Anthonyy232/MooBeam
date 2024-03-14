@@ -27,9 +27,6 @@ class Player {
         this.x = x;
         this.y = y;
         this.z = z;
-        this.rx = rx;
-        this.ry = ry;
-        this.rz = rz;
         this.velocity = {x: 0, y: 0, z: 0};
         this.acceleration = {x: 0.02, y: 0, z: 0.02};
         this.max_speed = 0.5;
@@ -183,7 +180,7 @@ export class MooBeam extends Scene {
                 color: hex_color("#FFFF00", 0.5), ambient: 0.7, diffusivity: 0.5, specularity: 0
             }),
             ufo_material: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#aeb2b8"), ambient: .4, diffusivity: 0.1, specularity: 1.5,
+                color: hex_color("#aeb2b8"), ambient: .2, diffusivity: 0.1, specularity: 1.5,
                 texture: new Texture("assets/ufo.jpg")
             }),
             shadow_material: new Material(new defs.Phong_Shader(1), {
@@ -198,29 +195,29 @@ export class MooBeam extends Scene {
                 texture: new Texture("assets/skybox.jpg")
             }),
             floor_material: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#00FF00"), ambient: 0.7, diffusivity: 0.5, specularity: 0,
-                texture: new Texture("assets/floor.jpg")
+                color: hex_color("#000000"), ambient: 0.7, diffusivity: 0.1, specularity: 0,
+                texture: new Texture("assets/grass.jpg")
             }),
             road_material: new Material(new defs.Phong_Shader(), {
-                color: hex_color("#c4c4c4"), ambient: 1, diffusivity: 1, specularity: 1
+                color: hex_color("#454545"), ambient: 1, diffusivity: 1, specularity: 1
             }),
             dash_material: new Material(new defs.Phong_Shader(), {
-                color: hex_color("#ffffff"), ambient: 1, diffusivity: 1, specularity: 1
+                color: hex_color("#cfcfcf"), ambient: 1, diffusivity: 1, specularity: 1
             }),
             skyscraper_material1: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 0.7, diffusivity: 1, specularity: 1,
                 texture: new Texture("assets/skyscraper1.jpg")
             }),
             skyscraper_material2: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#000000"), ambient: 1, diffusivity: 1, specularity: 1,
+                color: hex_color("#000000"), ambient: 0.4, diffusivity: 1, specularity: 1,
                 texture: new Texture("assets/skyscraper2.png")
             }),
             skyscraper_material3: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#000000"), ambient: 1, diffusivity: 1, specularity: 1,
+                color: hex_color("#000000"), ambient: 0.4, diffusivity: 1, specularity: 1,
                 texture: new Texture("assets/skyscraper3.png")
             }),
             building_material1: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#36454F"), ambient: 0.6, diffusivity: 0.5, specularity: 1,
+                color: hex_color("#36454F"), ambient: 0.4, diffusivity: 0.5, specularity: 1,
                 texture: new Texture("assets/skyscraper4.png")
             }),
             building_material2: new Material(new defs.Fake_Bump_Map(1), {
