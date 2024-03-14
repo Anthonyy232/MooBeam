@@ -431,8 +431,7 @@ export class MooBeam extends Scene {
     move_forward() {
         this.begin_game = true;
         if (!this.beaming && !this.end_game) {
-            let x_comp = Math.cos(this.camera_angle);
-            let z_comp = Math.sin(this.camera_angle);
+            this.up = true;
             this.player.velocity.z -= this.player.acceleration.z;
             this.player.velocity.x -= this.player.acceleration.x;
             if (Math.abs(this.player.velocity.z) > this.player.max_speed) {
@@ -447,6 +446,7 @@ export class MooBeam extends Scene {
     move_backward() {
         this.begin_game = true;
         if (!this.beaming && !this.end_game) {
+            this.down = true;
             let x_comp = Math.cos(this.camera_angle);
             let z_comp = Math.sin(this.camera_angle);
             this.player.velocity.z += this.player.acceleration.z;
@@ -462,8 +462,7 @@ export class MooBeam extends Scene {
     move_left() {
         this.begin_game = true;
         if (!this.beaming && !this.end_game) {
-            let x_comp = Math.cos(this.camera_angle);
-            let z_comp = Math.sin(this.camera_angle);
+            this.left = true;
             this.player.velocity.x -= this.player.acceleration.x;
             if (Math.abs(this.player.velocity.x) > this.player.max_speed) {
                 this.player.velocity.x = -this.player.max_speed
@@ -477,8 +476,7 @@ export class MooBeam extends Scene {
     move_right() {
         this.begin_game = true;
         if (!this.beaming && !this.end_game) {
-            let x_comp = Math.cos(this.camera_angle);
-            let z_comp = Math.sin(this.camera_angle);
+            this.right = true;
             this.player.velocity.x += this.player.acceleration.x;
             if (Math.abs(this.player.velocity.x) > this.player.max_speed) {
                 this.player.velocity.x = this.player.max_speed
