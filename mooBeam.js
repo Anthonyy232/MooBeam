@@ -492,11 +492,11 @@ export class MooBeam extends Scene {
     
     make_control_panel(program_state) {
         document.addEventListener('click', (event) => {
-            if (!this.beaming) {
+            if (!this.beaming && !this.crash && !this.end_game) {
                 this.show_beam = true;
                 this.check_cow_within_shadow()
             }
-            if (this.show_beam) {
+            if (this.show_beam && !this.crash && !this.end_game) {
                 setTimeout(() => {
                     this.show_beam = false;
                     this.beaming = false;
@@ -537,11 +537,11 @@ export class MooBeam extends Scene {
         this.new_line();
         this.new_line();
         this.key_triggered_button("Beam cows", ["b"], () => {
-            if (!this.beaming) {
+            if (!this.beaming && !this.crash && !this.end_game) {
                 this.show_beam = true;
                 this.check_cow_within_shadow()
             }
-            if (this.show_beam) {
+            if (this.show_beam && !this.crash && !this.end_game) {
                 setTimeout(() => {
                     this.show_beam = false;
                     this.beaming = false;
@@ -549,11 +549,11 @@ export class MooBeam extends Scene {
             }
         });
         this.key_triggered_button("Beam Cows", ["click"], () => {
-            if (!this.beaming) {
+            if (!this.beaming && !this.crash && !this.end_game) {
                 this.show_beam = true;
                 this.check_cow_within_shadow()
             }
-            if (this.show_beam) {
+            if (this.show_beam && !this.crash && !this.end_game) {
                 setTimeout(() => {
                     this.show_beam = false;
                     this.beaming = false;
@@ -561,11 +561,11 @@ export class MooBeam extends Scene {
             }
         });
         this.key_triggered_button("Beam Cows", [" "], () => {
-            if (!this.beaming) {
+            if (!this.beaming && !this.crash && !this.end_game) {
                 this.show_beam = true;
                 this.check_cow_within_shadow()
             }
-            if (this.show_beam) {
+            if (this.show_beam && !this.crash && !this.end_game) {
                 setTimeout(() => {
                     this.show_beam = false;
                     this.beaming = false;
@@ -647,7 +647,7 @@ export class MooBeam extends Scene {
 
     move_left() {
         this.begin_game = true;
-        if (!this.beaming && !this.end_game) {
+        if (!this.beaming && !this.end_game && !this.crash) {
             this.left = true;
             this.player.velocity.x -= this.player.acceleration.x;
             if (Math.abs(this.player.velocity.x) > this.player.max_speed) {
@@ -661,7 +661,7 @@ export class MooBeam extends Scene {
 
     move_right() {
         this.begin_game = true;
-        if (!this.beaming && !this.end_game) {
+        if (!this.beaming && !this.end_game && !this.crash) {
             this.right = true;
             this.player.velocity.x += this.player.acceleration.x;
             if (Math.abs(this.player.velocity.x) > this.player.max_speed) {
@@ -674,14 +674,14 @@ export class MooBeam extends Scene {
     }
 
     turn_left() {
-        if (!this.beaming && !this.end_game) {
+        if (!this.beaming && !this.end_game && !this.crash) {
             this.camera_right = false;
             this.camera_left = true;
         }
     }
 
     turn_right() {
-        if (!this.beaming && !this.end_game) {
+        if (!this.beaming && !this.end_game && !this.crash) {
             this.camera_right = true;
             this.camera_left = false;
         }
