@@ -28,8 +28,8 @@ class Player {
         this.y = y;
         this.z = z;
         this.velocity = {x: 0, y: 0, z: 0};
-        this.acceleration = {x: 0.02, y: 0, z: 0.02};
-        this.max_speed = 0.5;
+        this.acceleration = {x: 0.04, y: 0, z: 0.04};
+        this.max_speed = 0.45;
     }
 }
 class Skyscraper {
