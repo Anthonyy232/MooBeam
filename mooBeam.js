@@ -18,8 +18,8 @@ class Player {
         this.y = y;
         this.z = z;
         this.velocity = {x: 0, y: 0, z: 0};
-        this.acceleration = {x: 0.03, y: 0, z: 0.03};
-        this.max_speed = 0.75;
+        this.acceleration = {x: 0.02, y: 0, z: 0.02};
+        this.max_speed = 0.5;
     }
 }
 
@@ -77,6 +77,14 @@ export class MooBeam extends Scene {
         this.show_beam = false;
         this.beaming = false;
         this.desired = null;
+        this.up = false;
+        this.down = false;
+        this.left = false;
+        this.right = false;
+        this.camera_right = false;
+        this.camera_left = false;
+        this.behind_view = true;
+        this.stored_angle = 0;
 
         // Decrement the time every second
         let timer = setInterval(() => {
@@ -332,21 +340,35 @@ export class MooBeam extends Scene {
     }
 
     make_control_panel(program_state) {
-        this.key_triggered_button("Top View", ["Control", "0"], () => this.attached = () => null);
+        this.key_triggered_button("Top View", ["Control", "0"], () => {
+            this.behind_view = false;
+            this.camera_angle = 0;
+        });
         this.new_line();
-        this.key_triggered_button("Behind View", ["Control", "1"], () => this.attached = () => this.object);
+        this.key_triggered_button("Behind View", ["Control", "1"], () => {
+            this.behind_view = true;
+            this.camera_angle = this.stored_angle;
+        });
 
         this.key_triggered_button("Move forward", ["i"], this.move_forward, "#6E6460", () => {
+            this.player.velocity.x = 0;
             this.player.velocity.z = 0;
+            this.up = false;
         });
         this.key_triggered_button("Move backward", ["k"], this.move_backward, "#6E6460", () => {
+            this.player.velocity.x = 0;
             this.player.velocity.z = 0;
+            this.down = false;
         });
         this.key_triggered_button("Move left", ["j"], this.move_left, "#6E6460", () => {
             this.player.velocity.x = 0;
+            this.player.velocity.z = 0;
+            this.left = false;
         });
         this.key_triggered_button("Move right", ["l"], this.move_right, "#6E6460", () => {
             this.player.velocity.x = 0;
+            this.player.velocity.z = 0;
+            this.right = false;
         });
         this.key_triggered_button("Reset game", ["r"], this.reset);
         this.key_triggered_button("Beam cows", ["b"], () => {
@@ -361,16 +383,26 @@ export class MooBeam extends Scene {
                 }, 1000);
             }
         });
-        this.key_triggered_button("Turn left", [","], this.turn_left, "#6E6460");
-        this.key_triggered_button("Turn right", ["."], this.turn_right, "#6E6460");
-        this.key_triggered_button("Log", ["c"], () => {
-            function getRandomInt(max) {
-                return Math.floor(Math.random() * max);
+        this.key_triggered_button("", ["mousedown"], () => {
+            if (!this.beaming) {
+                this.show_beam = true;
+                this.check_cow_within_shadow()
             }
-            let test = getRandomInt(10);
-            console.log(getRandomInt(10));
+            if (this.show_beam) {
+                setTimeout(() => {
+                    this.show_beam = false;
+                    this.beaming = false;
+                }, 1000);
+            }
         });
-
+        this.key_triggered_button("Turn left", [","], this.turn_left, "#6E6460", () => {
+            this.camera_right = false;
+            this.camera_left = false;
+        });
+        this.key_triggered_button("Turn right", ["."], this.turn_right, "#6E6460", () => {
+            this.camera_right = false;
+            this.camera_left = false;
+        });
     }
 
     reset() {
@@ -384,20 +416,25 @@ export class MooBeam extends Scene {
         this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_transformation);
         this.player.velocity = {x: 30, y: 30, z: 30};
         this.children.clear();
+        this.up = false;
+        this.down = false;
+        this.left = false;
+        this.right = false;
+        this.camera_right = false;
+        this.camera_left = false;
+        this.behind_view = true;
+        this.stored_angle = 0;
     }
 
     move_forward() {
         this.begin_game = true;
         if (!this.beaming && !this.end_game) {
-            let x_comp = Math.cos(this.camera_angle);
-            let z_comp = Math.sin(this.camera_angle);
+            this.up = true;
             this.player.velocity.z -= this.player.acceleration.z;
             this.player.velocity.x -= this.player.acceleration.x;
             if (Math.abs(this.player.velocity.z) > this.player.max_speed) {
                 this.player.velocity.z = -this.player.max_speed;
             }
-            this.player.z += this.player.velocity.z * x_comp;
-            this.player.x += this.player.velocity.z * z_comp;
             if (this.hasEscapedBounds()) {
                 this.end_game = true;
             }
@@ -407,14 +444,11 @@ export class MooBeam extends Scene {
     move_backward() {
         this.begin_game = true;
         if (!this.beaming && !this.end_game) {
-            let x_comp = Math.cos(this.camera_angle);
-            let z_comp = Math.sin(this.camera_angle);
+            this.down = true;
             this.player.velocity.z += this.player.acceleration.z;
             if (Math.abs(this.player.velocity.z) > this.player.max_speed) {
                 this.player.velocity.z = this.player.max_speed
             }
-            this.player.z += this.player.velocity.z * x_comp;
-            this.player.x += this.player.velocity.z * z_comp;
             if (this.hasEscapedBounds()) {
                 this.end_game = true;
             }
@@ -424,15 +458,11 @@ export class MooBeam extends Scene {
     move_left() {
         this.begin_game = true;
         if (!this.beaming && !this.end_game) {
-            let x_comp = Math.cos(this.camera_angle);
-            let z_comp = Math.sin(this.camera_angle);
-
+            this.left = true;
             this.player.velocity.x -= this.player.acceleration.x;
             if (Math.abs(this.player.velocity.x) > this.player.max_speed) {
                 this.player.velocity.x = -this.player.max_speed
             }
-            this.player.x += this.player.velocity.x * x_comp;
-            this.player.z -= this.player.velocity.x * z_comp;
             if (this.hasEscapedBounds()) {
                 this.end_game = true;
             }
@@ -442,15 +472,11 @@ export class MooBeam extends Scene {
     move_right() {
         this.begin_game = true;
         if (!this.beaming && !this.end_game) {
-            let x_comp = Math.cos(this.camera_angle);
-            let z_comp = Math.sin(this.camera_angle);
-
+            this.right = true;
             this.player.velocity.x += this.player.acceleration.x;
             if (Math.abs(this.player.velocity.x) > this.player.max_speed) {
                 this.player.velocity.x = this.player.max_speed
             }
-            this.player.x += this.player.velocity.x * x_comp;
-            this.player.z -= this.player.velocity.x * z_comp;
             if (this.hasEscapedBounds()) {
                 this.end_game = true;
             }
@@ -458,14 +484,16 @@ export class MooBeam extends Scene {
     }
 
     turn_left() {
-        if (!this.end_game) {
-            this.camera_angle += Math.PI / 36;
+        if (!this.beaming && !this.end_game) {
+            this.camera_right = false;
+            this.camera_left = true;
         }
     }
 
     turn_right() {
-        if (!this.end_game) {
-            this.camera_angle -= Math.PI / 36;
+        if (!this.beaming && !this.end_game) {
+            this.camera_right = true;
+            this.camera_left = false;
         }
     }
 
@@ -474,10 +502,6 @@ export class MooBeam extends Scene {
         score_html.innerHTML = this.score.toString()
         time_html.innerHTML = format_time(this.time)
 
-        // Display bottom control panel
-        if (!context.scratchpad.controls) {
-            this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
-        }
         if (!this.begin_game) {
             program_state.set_camera(this.initial_camera_location);
         }
@@ -487,9 +511,32 @@ export class MooBeam extends Scene {
         const time = program_state.animation_time / 1000
 
         if (this.end_game) {
+            this.behind_view = false;
             this.animate_ufo_crash(program_state);
         } else
         {
+            if (this.behind_view) {
+                this.stored_angle = this.camera_angle
+            }
+            if (this.camera_left && this.behind_view) {
+                this.camera_angle += (Math.PI / 36) * 0.5;
+            }
+            if (this.camera_right && this.behind_view) {
+                this.camera_angle -= (Math.PI / 36) * 0.5;
+            }
+            let x_comp = Math.cos(this.camera_angle);
+            let z_comp = Math.sin(this.camera_angle);
+            if (!this.beaming && !this.show_beam && !this.end_game) {
+                if (this.left || this.right) {
+                    this.player.x += this.player.velocity.x * x_comp;
+                    this.player.z -= this.player.velocity.x * z_comp;
+                }
+                if (this.up || this.down) {
+                    this.player.z += this.player.velocity.z * x_comp;
+                    this.player.x += this.player.velocity.z * z_comp;
+                }
+            }
+
             this.final_local_time = time;
             this.ufo_state = Mat4.identity()
                 .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
@@ -513,8 +560,8 @@ export class MooBeam extends Scene {
                 .times(Mat4.translation(this.player.x, this.player.y+60, this.player.z))
                 .times(Mat4.rotation(-Math.PI / 2, 1, 0, 0))
             );
-            this.object = this.ufo_state;
-            this.desired = this.attached && this.attached() != null ? top : behind
+
+            this.desired = this.behind_view ? behind : top
             program_state.set_camera(this.desired);
         }
 
@@ -687,7 +734,7 @@ export class MooBeam extends Scene {
                 .times(Mat4.scale(this.beam_size, this.beam_height, this.beam_size))
                 .times(Mat4.rotation(3 * Math.PI / 2, 1, 0, 0));
             this.shapes.beam.draw(context, program_state, beam_state, this.materials.light_material);
-        } else {
+        } else if (!this.end_game) {
             this.shapes.shadow.draw(context, program_state, shadow_state, this.materials.shadow_material);
         }
     }
