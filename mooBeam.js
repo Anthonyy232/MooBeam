@@ -126,7 +126,7 @@ export class MooBeam extends Scene {
         this.skyscrapers_count = 120;
         this.skyscrapers_states = this.generateSkyscrapers(this.skyscraper_transformation);
         this.building_height = 5;
-        this.building_size = 4.99;
+        this.building_size = 4.95;
         this.building_transformation = Mat4.identity()
             .times(Mat4.scale(this.building_size, this.building_height, this.building_size))
         this.buildings_count = 120;
