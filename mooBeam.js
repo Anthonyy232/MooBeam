@@ -444,12 +444,13 @@ export class MooBeam extends Scene {
             this.behind_view = false;
             this.camera_angle = 0;
         });
-        this.new_line();
         this.key_triggered_button("Behind View", ["Control", "1"], () => {
             this.behind_view = true;
             this.camera_angle = this.stored_angle;
         });
-
+        this.key_triggered_button("Reset game", ["r"], this.reset);
+        this.new_line();
+        this.new_line();
         this.key_triggered_button("Move forward", ["w"], this.move_forward, "#6E6460", () => {
             this.player.velocity.x = 0;
             this.player.velocity.z = 0;
@@ -470,7 +471,8 @@ export class MooBeam extends Scene {
             this.player.velocity.z = 0;
             this.right = false;
         });
-        this.key_triggered_button("Reset game", ["r"], this.reset);
+        this.new_line();
+        this.new_line();
         this.key_triggered_button("Beam cows", ["b"], () => {
             if (!this.beaming) {
                 this.show_beam = true;
@@ -507,23 +509,26 @@ export class MooBeam extends Scene {
                 }, 1000);
             }
         });
+        this.new_line();
+        this.new_line();
         this.key_triggered_button("Turn left", ["ArrowLeft"], this.turn_left, "#6E6460", () => {
             this.camera_right = false;
             this.camera_left = false;
         });
+        this.key_triggered_button("Turn left", [","], this.turn_left, "#6E6460", () => {
+            this.camera_right = false;
+            this.camera_left = false;
+        });
+        this.new_line();
+        this.new_line();
         this.key_triggered_button("Turn right", ["ArrowRight"], this.turn_right, "#6E6460", () => {
             this.camera_right = false;
             this.camera_left = false;
         });
-        this.key_triggered_button("Turn left", ["q"], this.turn_left, "#6E6460", () => {
+        this.key_triggered_button("Turn right", ["."], this.turn_right, "#6E6460", () => {
             this.camera_right = false;
             this.camera_left = false;
         });
-        this.key_triggered_button("Turn right", ["e"], this.turn_right, "#6E6460", () => {
-            this.camera_right = false;
-            this.camera_left = false;
-        });
-
     }
 
     reset() {
@@ -554,7 +559,6 @@ export class MooBeam extends Scene {
         if (!this.beaming && !this.end_game) {
             this.up = true;
             this.player.velocity.z -= this.player.acceleration.z;
-            this.player.velocity.x -= this.player.acceleration.x;
             if (Math.abs(this.player.velocity.z) > this.player.max_speed) {
                 this.player.velocity.z = -this.player.max_speed;
             }
@@ -568,8 +572,6 @@ export class MooBeam extends Scene {
         this.begin_game = true;
         if (!this.beaming && !this.end_game) {
             this.down = true;
-            let x_comp = Math.cos(this.camera_angle);
-            let z_comp = Math.sin(this.camera_angle);
             this.player.velocity.z += this.player.acceleration.z;
             if (Math.abs(this.player.velocity.z) > this.player.max_speed) {
                 this.player.velocity.z = this.player.max_speed
