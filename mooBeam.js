@@ -495,14 +495,35 @@ export class MooBeam extends Scene {
                 }, 1000);
             }
         });
-        this.key_triggered_button("Turn left", [","], this.turn_left, "#6E6460", () => {
+        this.key_triggered_button("Beam Cows", [" "], () => {
+            if (!this.beaming) {
+                this.show_beam = true;
+                this.check_cow_within_shadow()
+            }
+            if (this.show_beam) {
+                setTimeout(() => {
+                    this.show_beam = false;
+                    this.beaming = false;
+                }, 1000);
+            }
+        });
+        this.key_triggered_button("Turn left", ["ArrowLeft"], this.turn_left, "#6E6460", () => {
             this.camera_right = false;
             this.camera_left = false;
         });
-        this.key_triggered_button("Turn right", ["."], this.turn_right, "#6E6460", () => {
+        this.key_triggered_button("Turn right", ["ArrowRight"], this.turn_right, "#6E6460", () => {
             this.camera_right = false;
             this.camera_left = false;
         });
+        this.key_triggered_button("Turn left", ["q"], this.turn_left, "#6E6460", () => {
+            this.camera_right = false;
+            this.camera_left = false;
+        });
+        this.key_triggered_button("Turn right", ["e"], this.turn_right, "#6E6460", () => {
+            this.camera_right = false;
+            this.camera_left = false;
+        });
+
     }
 
     reset() {
