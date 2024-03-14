@@ -13,16 +13,18 @@ const {
 } = defs
 
 class Player {
-    constructor(x, y, z) {
+    constructor(x, y, z, rx, ry, rz) {
         this.x = x;
         this.y = y;
         this.z = z;
+        this.rx = rx;
+        this.ry = ry;
+        this.rz = rz;
         this.velocity = {x: 0, y: 0, z: 0};
         this.acceleration = {x: 0.02, y: 0, z: 0.02};
         this.max_speed = 0.5;
     }
 }
-
 class Skyscraper {
     constructor(transformation, x, y ,z) {
         this.x = x;
@@ -69,7 +71,7 @@ export class MooBeam extends Scene {
         };
         this.shapes.skyscraper.arrays.texture_coord.forEach(p => p.scale_by(3));
 
-        this.starting_location = new Player(0, 20, 0)
+        this.starting_location = new Player(0, 20, 0, 0, 0, 0)
         this.begin_game = false;
         this.end_game = false;
         this.score = 0;
@@ -290,27 +292,27 @@ export class MooBeam extends Scene {
     }
 
     animate_ufo_crash(program_state) {
-        /* Adjust the position of the ufo (transform, x, y ,z) based on the time, adjust below
-        for local time, use this.final_local_time
+        let local_time = program_state.animation_time/1000 - this.final_local_time;
+        //console.log(local_time);
 
-        let speed = 0.0008;
-        let cow_time = Math.min(program_state.animation_time - this.cows_states[i].local_time, 1500);
-        let angle = 0.1 * (90 * (this.cows_states[i].y / this.player.y)) * (Math.PI / 180);
-        let direction = {x: this.player.x - this.cows_states[i].x, y: this.player.y - this.cows_states[i].y, z: this.player.z - this.cows_states[i].z};
-        let length = Math.sqrt(direction.x * direction.x + direction.y * direction.y + direction.z * direction.z);
-        direction.x /= length;
-        direction.y /= length;
-        direction.z /= length;
+        //animation broken down in chronological order
+        if (local_time > 0 && local_time <= 0.2) {
+            //this.ufo_state = this.ufo_state.times(Mat4.rotation(0.07, 1, 1,0))
+        }
+        if (local_time > 0.0 && local_time < 1) {
+            //this.ufo_state = this.ufo_state.times(Mat4.translation(0, 0.04, 0))
+            this.ufo_state = this.ufo_state.times(Mat4.rotation(0.3, 0.5, 1,0))
+            //this.ufo_state = this.ufo_state.times(Mat4.rotation(0.1, 1, 0,0))
 
-        this.cows_states[i].transformation = this.cows_states[i].transformation
-            .times(Mat4.translation(cow_time * speed * direction.x, cow_time * speed * direction.y, cow_time * speed * direction.z));
-        this.cows_states[i].x += cow_time * speed * direction.x;
-        this.cows_states[i].y += cow_time * speed * direction.y;
-        this.cows_states[i].z += cow_time * speed * direction.z;
-        if (this.cows_states[i].angle) {
-            this.cows_states[i].angle = this.cows_states[i].angle - angle;
-        } else { this.cows_states[i].angle = angle; }
-         */
+        }
+        if (local_time >= 1 && local_time < 10 ) {
+            //this.ufo_state = this.ufo_state.times(Mat4.translation(0, -0.1*local_time**2+5 , 0))
+            this.ufo_state = Mat4.identity().times(Mat4.translation(this.player.x, this.player.y, this.player.z))
+                .times(Mat4.translation(0, -2*(local_time*2.2-4)**2+2 , 0))
+                .times(Mat4.rotation(local_time*6, 0,1 , 0))
+                .times(Mat4.rotation(0.5, 1,0 , 0))
+
+        }
     }
 
     is_animating(program_state) {
@@ -429,7 +431,8 @@ export class MooBeam extends Scene {
     move_forward() {
         this.begin_game = true;
         if (!this.beaming && !this.end_game) {
-            this.up = true;
+            let x_comp = Math.cos(this.camera_angle);
+            let z_comp = Math.sin(this.camera_angle);
             this.player.velocity.z -= this.player.acceleration.z;
             this.player.velocity.x -= this.player.acceleration.x;
             if (Math.abs(this.player.velocity.z) > this.player.max_speed) {
@@ -444,7 +447,8 @@ export class MooBeam extends Scene {
     move_backward() {
         this.begin_game = true;
         if (!this.beaming && !this.end_game) {
-            this.down = true;
+            let x_comp = Math.cos(this.camera_angle);
+            let z_comp = Math.sin(this.camera_angle);
             this.player.velocity.z += this.player.acceleration.z;
             if (Math.abs(this.player.velocity.z) > this.player.max_speed) {
                 this.player.velocity.z = this.player.max_speed
@@ -458,7 +462,8 @@ export class MooBeam extends Scene {
     move_left() {
         this.begin_game = true;
         if (!this.beaming && !this.end_game) {
-            this.left = true;
+            let x_comp = Math.cos(this.camera_angle);
+            let z_comp = Math.sin(this.camera_angle);
             this.player.velocity.x -= this.player.acceleration.x;
             if (Math.abs(this.player.velocity.x) > this.player.max_speed) {
                 this.player.velocity.x = -this.player.max_speed
@@ -472,7 +477,8 @@ export class MooBeam extends Scene {
     move_right() {
         this.begin_game = true;
         if (!this.beaming && !this.end_game) {
-            this.right = true;
+            let x_comp = Math.cos(this.camera_angle);
+            let z_comp = Math.sin(this.camera_angle);
             this.player.velocity.x += this.player.acceleration.x;
             if (Math.abs(this.player.velocity.x) > this.player.max_speed) {
                 this.player.velocity.x = this.player.max_speed
