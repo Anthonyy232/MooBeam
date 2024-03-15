@@ -3,16 +3,20 @@ import { Shape_From_File } from './examples/obj-file-demo.js';
 const score_html = document.querySelector('#score')
 const time_html = document.querySelector('#timer')
 const show_end = document.getElementById('end-game');
-const show_message = document.getElementById('score');
+const show_end_message = document.getElementById('end_score');
+const show_crash = document.getElementById('crash-game');
+const show_crash_message = document.getElementById('crash_score');
 
-export function displayEnd(crashed, score) {
+export function displayEnd(score) {
     show_end.style.display = 'block';
-    if (crashed) {
-        show_message.textContent = "You crashed! Score: " + score
-    } else {
-        show_message.textContent = "You won! Score: " + score
-    }
+    show_end_message.innerHTML = "You won!<br> Score: " + score;
 }
+
+export function displayCrash(score) {
+    show_crash.style.display = 'block';
+    show_crash_message.innerHTML = "Game Over: You Crashed!<br> Score: " + score;
+}
+
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Texture, Material, Scene,
@@ -113,6 +117,7 @@ export class MooBeam extends Scene {
         this.behind_view = true;
         this.stored_angle = 0;
         this.crash = false;
+        this.show_dark = false;
 
         // Decrement the time every second
         let timer = setInterval(() => {
@@ -497,6 +502,9 @@ export class MooBeam extends Scene {
                 if (local_time > 1.5) {
                     this.player.y -= 0.5;
                 }
+                if (local_time > 1.7) {
+                    return true;
+                }
             }
         } else {
             this.player.y = 7;
@@ -668,6 +676,7 @@ export class MooBeam extends Scene {
         this.behind_view = true;
         this.stored_angle = 0;
         this.crash = false;
+        this.show_dark = false;
     }
 
     move_forward() {
@@ -753,446 +762,427 @@ export class MooBeam extends Scene {
 
         const time = program_state.animation_time / 1000
 
-        // Movement system
-        if (this.end_game) {
-            if (this.crash) {
-                displayEnd(true, this.score)
-                this.animate_ufo_crash(program_state);
+        if (this.show_dark) { // Show dark screen after crash
+            displayCrash(this.score)
+        }
 
-                let local_time = program_state.animation_time/1000 - this.final_local_time - 2.27 - 0.75; // 0.75 is time between hitting floor and explosion
-                if (local_time >= 0 && local_time < 1) {
-                    this.explosion_state1 = Mat4.identity()
-                        .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
-                        .times(Mat4.scale(local_time * 9, local_time * 9, local_time * 9));
-                    this.explosion_state2 = Mat4.identity()
-                        .times(Mat4.translation(this.player.x, this.player.y, this.player.z-2))
-                        .times(Mat4.scale(local_time * 12, local_time * 5, local_time * 12))
-                        .times(Mat4.rotation(Math.PI, 1, 0, 0));
-                    this.explosion_state3 = Mat4.identity()
-                        .times(Mat4.translation(this.player.x, this.player.y, this.player.z-2))
-                        .times(Mat4.scale(local_time * 12, local_time * 5, local_time * 12))
-                        .times(Mat4.rotation(3*Math.PI/2, 1, 0, 0));
-                    this.explosion_state4= Mat4.identity()
-                        .times(Mat4.translation(this.player.x+5, this.player.y, this.player.z))
-                        .times(Mat4.scale(local_time * 12, local_time * 3, local_time * 12))
-                        .times(Mat4.rotation(Math.PI/2, 0, 1, 0));
-                    this.explosion_state5= Mat4.identity()
-                        .times(Mat4.translation(this.player.x-5, this.player.y, this.player.z))
-                        .times(Mat4.scale(local_time * 12, local_time * 2, local_time * 12))
-                        .times(Mat4.rotation(3*Math.PI/2, 0, 1, 0));
+        if (!this.show_dark) {
+            // Movement system
+            if (this.end_game) {
+                if (this.crash) {
+                    this.animate_ufo_crash(program_state)
+                    let local_time = program_state.animation_time/1000 - this.final_local_time - 2.27 - 0.65;
+                    if (local_time >= 0 && local_time < 1.5) {
+                        this.explosion_state1 = Mat4.identity()
+                            .times(Mat4.translation(this.player.x, this.player.y-5, this.player.z))
+                            .times(Mat4.scale(local_time * 9, local_time * 9, local_time * 9));
+                        this.explosion_state2 = Mat4.identity()
+                            .times(Mat4.translation(this.player.x, this.player.y-5, this.player.z-2))
+                            .times(Mat4.scale(local_time * 15, local_time * 5, local_time * 15))
+                            .times(Mat4.rotation(Math.PI, 1, 0, 0));
+                        this.explosion_state3 = Mat4.identity()
+                            .times(Mat4.translation(this.player.x, this.player.y-5, this.player.z-2))
+                            .times(Mat4.scale(local_time * 15, local_time * 5, local_time * 15))
+                            .times(Mat4.rotation(3*Math.PI/2, 1, 0, 0));
+                        this.explosion_state4= Mat4.identity()
+                            .times(Mat4.translation(this.player.x+5, this.player.y-5, this.player.z))
+                            .times(Mat4.scale(local_time * 15, local_time * 3, local_time * 15))
+                            .times(Mat4.rotation(Math.PI/2, 0, 1, 0));
+                        this.explosion_state5= Mat4.identity()
+                            .times(Mat4.translation(this.player.x-5, this.player.y-5, this.player.z))
+                            .times(Mat4.scale(local_time * 15, local_time * 2, local_time * 15))
+                            .times(Mat4.rotation(3*Math.PI/2, 0, 1, 0));
 
-                    this.shapes.explosion.draw(context, program_state, this.explosion_state1, this.materials.explosion_yellow_material);
-                    this.shapes.explosion.draw(context, program_state, this.explosion_state2, this.materials.explosion_red2_material);
-                    this.shapes.explosion.draw(context, program_state, this.explosion_state3, this.materials.explosion_yellow2_material);
-                    this.shapes.explosion.draw(context, program_state, this.explosion_state4, this.materials.explosion_orange_material);
-                    this.shapes.explosion.draw(context, program_state, this.explosion_state5, this.materials.explosion_red_material);
-                }
-                if (local_time >= 1 && local_time < 2) {
-                    this.explosion_state1 = Mat4.identity()
-                        .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
-                        .times(Mat4.scale(9, 9, 9));
-                    this.explosion_state2 = Mat4.identity()
-                        .times(Mat4.translation(this.player.x, this.player.y, this.player.z-2))
-                        .times(Mat4.scale(12, 5, 12))
-                        .times(Mat4.rotation(Math.PI, 1, 0, 0));
-                    this.explosion_state3 = Mat4.identity()
-                        .times(Mat4.translation(this.player.x, this.player.y, this.player.z-2))
-                        .times(Mat4.scale(12, 5, 12))
-                        .times(Mat4.rotation(3*Math.PI/2, 1, 0, 0));
-                    this.explosion_state4 = Mat4.identity()
-                        .times(Mat4.translation(this.player.x+5, this.player.y, this.player.z))
-                        .times(Mat4.scale(12, 3, 12))
-                        .times(Mat4.rotation(Math.PI/2, 0, 1, 0));
-                    this.explosion_state5 = Mat4.identity()
-                        .times(Mat4.translation(this.player.x-5, this.player.y, this.player.z))
-                        .times(Mat4.scale(12, 2, 12))
-                        .times(Mat4.rotation(3*Math.PI/2, 0, 1, 0));
+                        this.shapes.explosion.draw(context, program_state, this.explosion_state1, this.materials.explosion_yellow_material);
+                        this.shapes.explosion.draw(context, program_state, this.explosion_state2, this.materials.explosion_red2_material);
+                        this.shapes.explosion.draw(context, program_state, this.explosion_state3, this.materials.explosion_yellow2_material);
+                        this.shapes.explosion.draw(context, program_state, this.explosion_state4, this.materials.explosion_orange_material);
+                        this.shapes.explosion.draw(context, program_state, this.explosion_state5, this.materials.explosion_red_material);
+                    }
+                    if (local_time >= 1.5 && local_time < 3) {
+                        this.explosion_state1 = this.explosion_state1.times(Mat4.scale(1.005, 1.005, 1.005));
+                        this.explosion_state2 = this.explosion_state2.times(Mat4.scale(1.005, 1.005, 1.005));
+                        this.explosion_state3 = this.explosion_state3.times(Mat4.scale(1.005, 1.005, 1.005));
+                        this.explosion_state4 = this.explosion_state4.times(Mat4.scale(1.005, 1.005, 1.005));
+                        this.explosion_state5 = this.explosion_state5.times(Mat4.scale(1.005, 1.005, 1.005));
 
-                    this.shapes.explosion.draw(context, program_state, this.explosion_state1, this.materials.explosion_yellow_material);
-                    this.shapes.explosion.draw(context, program_state, this.explosion_state2, this.materials.explosion_red2_material);
-                    this.shapes.explosion.draw(context, program_state, this.explosion_state3, this.materials.explosion_yellow2_material);
-                    this.shapes.explosion.draw(context, program_state, this.explosion_state4, this.materials.explosion_orange_material);
-                    this.shapes.explosion.draw(context, program_state, this.explosion_state5, this.materials.explosion_red_material);
-                }
-                if (local_time >= 2 && local_time < 3) {
-                    this.explosion_state1 = this.explosion_state1.times(Mat4.scale(1.001, 1.001, 1.001));
-                    this.explosion_state2 = this.explosion_state2.times(Mat4.scale(1.001, 1.001, 1.001));
-                    this.explosion_state3 = this.explosion_state3.times(Mat4.scale(1.001, 1.001, 1.001));
-                    this.explosion_state4 = this.explosion_state4.times(Mat4.scale(1.001, 1.001, 1.001));
-                    this.explosion_state5 = this.explosion_state5.times(Mat4.scale(1.001, 1.001, 1.001));
+                        this.shapes.explosion.draw(context, program_state, this.explosion_state1, this.materials.explosion_black_material);
+                        this.shapes.explosion.draw(context, program_state, this.explosion_state2, this.materials.explosion_gray_material);
+                        this.shapes.explosion.draw(context, program_state, this.explosion_state3, this.materials.explosion_black_material);
+                        this.shapes.explosion.draw(context, program_state, this.explosion_state4, this.materials.explosion_gray_material);
+                        this.shapes.explosion.draw(context, program_state, this.explosion_state5, this.materials.explosion_black_material);
+                    }
+                    if (local_time >= 3 && local_time < 4) {
+                        this.explosion_state1 = this.explosion_state1.times(Mat4.scale(1.005, 1.005, 1.005));
+                        this.explosion_state2 = this.explosion_state2.times(Mat4.scale(1.005, 1.005, 1.005));
+                        this.explosion_state3 = this.explosion_state3.times(Mat4.scale(1.005, 1.005, 1.005));
+                        this.explosion_state4 = this.explosion_state4.times(Mat4.scale(1.005, 1.005, 1.005));
+                        this.explosion_state5 = this.explosion_state5.times(Mat4.scale(1.005, 1.005, 1.005));
 
-                    this.shapes.explosion.draw(context, program_state, this.explosion_state1, this.materials.explosion_black_material);
-                    this.shapes.explosion.draw(context, program_state, this.explosion_state2, this.materials.explosion_gray_material);
-                    this.shapes.explosion.draw(context, program_state, this.explosion_state3, this.materials.explosion_black_material);
-                    this.shapes.explosion.draw(context, program_state, this.explosion_state4, this.materials.explosion_gray_material);
-                    this.shapes.explosion.draw(context, program_state, this.explosion_state5, this.materials.explosion_black_material);
-                }
-                if (local_time >= 3 && local_time < 4) {
-                    this.explosion_state1 = this.explosion_state1.times(Mat4.scale(1.001, 1.001, 1.001));
-                    this.explosion_state2 = this.explosion_state2.times(Mat4.scale(1.001, 1.001, 1.001));
-                    this.explosion_state3 = this.explosion_state3.times(Mat4.scale(1.001, 1.001, 1.001));
-                    this.explosion_state4 = this.explosion_state4.times(Mat4.scale(1.001, 1.001, 1.001));
-                    this.explosion_state5 = this.explosion_state5.times(Mat4.scale(1.001, 1.001, 1.001));
+                        this.shapes.explosion.draw(context, program_state, this.explosion_state2, this.materials.explosion_gray_material);
+                        this.shapes.explosion.draw(context, program_state, this.explosion_state3, this.materials.explosion_black_material);
+                        this.shapes.explosion.draw(context, program_state, this.explosion_state4, this.materials.explosion_gray_material);
+                        this.shapes.explosion.draw(context, program_state, this.explosion_state5, this.materials.explosion_black_material);
+                    }
 
-                    this.shapes.explosion.draw(context, program_state, this.explosion_state2, this.materials.explosion_gray_material);
-                    this.shapes.explosion.draw(context, program_state, this.explosion_state3, this.materials.explosion_black_material);
-                    this.shapes.explosion.draw(context, program_state, this.explosion_state4, this.materials.explosion_gray_material);
-                    this.shapes.explosion.draw(context, program_state, this.explosion_state5, this.materials.explosion_black_material);
-                }
+                    if (local_time >= 4 && local_time < 6) {
+                        this.explosion_state1 = this.explosion_state1.times(Mat4.scale(1.005, 1.005, 1.005));
+                        this.explosion_state2 = this.explosion_state2.times(Mat4.scale(1.005, 1.005, 1.005));
+                        this.explosion_state3 = this.explosion_state3.times(Mat4.scale(1.005, 1.005, 1.005));
+                        this.explosion_state4 = this.explosion_state4.times(Mat4.scale(1.005, 1.005, 1.005));
+                        this.explosion_state5 = this.explosion_state5.times(Mat4.scale(1.005, 1.005, 1.005));
 
-                if (local_time >= 4 && local_time < 6) {
-                    this.explosion_state1 = this.explosion_state1.times(Mat4.scale(1.001, 1.001, 1.001));
-                    this.explosion_state2 = this.explosion_state2.times(Mat4.scale(1.001, 1.001, 1.001));
-                    this.explosion_state3 = this.explosion_state3.times(Mat4.scale(1.001, 1.001, 1.001));
-                    this.explosion_state4 = this.explosion_state4.times(Mat4.scale(1.001, 1.001, 1.001));
-                    this.explosion_state5 = this.explosion_state5.times(Mat4.scale(1.001, 1.001, 1.001));
+                        this.shapes.explosion.draw(context, program_state, this.explosion_state3, this.materials.explosion_black_material);
+                        this.shapes.explosion.draw(context, program_state, this.explosion_state4, this.materials.explosion_gray_material);
+                        this.shapes.explosion.draw(context, program_state, this.explosion_state5, this.materials.explosion_black_material);
+                    }
 
-                    this.shapes.explosion.draw(context, program_state, this.explosion_state3, this.materials.explosion_black_material);
-                    this.shapes.explosion.draw(context, program_state, this.explosion_state4, this.materials.explosion_gray_material);
-                    this.shapes.explosion.draw(context, program_state, this.explosion_state5, this.materials.explosion_black_material);
+                    if (local_time > 6.5) {
+                        this.show_dark = true;
+                    }
+
+                } else {
+                    displayEnd(this.score)
                 }
 
             } else {
-                displayEnd(false, this.score)
-            }
-
-        } else {
-            if (this.behind_view) {
-                this.stored_angle = this.camera_angle
-            }
-            if (this.camera_left && this.behind_view) {
-                this.camera_angle += (Math.PI / 36) * 0.5;
-            }
-            if (this.camera_right && this.behind_view) {
-                this.camera_angle -= (Math.PI / 36) * 0.5;
-            }
-            let x_comp = Math.cos(this.camera_angle);
-            let z_comp = Math.sin(this.camera_angle);
-            if (!this.beaming && !this.show_beam && !this.end_game) {
-                if (this.left || this.right) {
-                    this.player.x += this.player.velocity.x * x_comp;
-                    this.player.z -= this.player.velocity.x * z_comp;
+                if (this.behind_view) {
+                    this.stored_angle = this.camera_angle
                 }
-                if (this.up || this.down) {
-                    this.player.z += this.player.velocity.z * x_comp;
+                if (this.camera_left && this.behind_view) {
+                    this.camera_angle += (Math.PI / 36) * 0.5;
+                }
+                if (this.camera_right && this.behind_view) {
+                    this.camera_angle -= (Math.PI / 36) * 0.5;
+                }
+                let x_comp = Math.cos(this.camera_angle);
+                let z_comp = Math.sin(this.camera_angle);
+                if (!this.beaming && !this.show_beam && !this.end_game) {
+                    if (this.left || this.right) {
+                        this.player.x += this.player.velocity.x * x_comp;
+                        this.player.z -= this.player.velocity.x * z_comp;
+                    }
+                    if (this.up || this.down) {
+                        this.player.z += this.player.velocity.z * x_comp;
 
-                    this.player.x += this.player.velocity.z * z_comp;
+                        this.player.x += this.player.velocity.z * z_comp;
+                    }
+                }
+                this.final_local_time = time;
+                if (!this.show_beam) {
+                    this.ufo_state = Mat4.identity()
+                        .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
+                        //idle animation
+                        .times(Mat4.translation(0, 0.3 * Math.sin(time * 3), 0))
+                        .times(Mat4.rotation(time / 1.5, 0, 1, 0))
                 }
             }
-            this.final_local_time = time;
-            if (!this.show_beam) {
-                this.ufo_state = Mat4.identity()
-                    .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
-                    //idle animation
-                    .times(Mat4.translation(0, 0.3 * Math.sin(time * 3), 0))
-                    .times(Mat4.rotation(time / 1.5, 0, 1, 0))
+
+            // Shadow under UFO
+            let shadow_state = Mat4.identity()
+                .times(Mat4.translation(this.player.x, 0.03, this.player.z))
+                .times(Mat4.scale(this.beam_size, this.beam_size, this.beam_size))
+                .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
+
+            // Camera system
+            let behind = Mat4.inverse(Mat4.identity()
+                .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
+                .times(Mat4.rotation(this.camera_angle, 0, 1, 0))
+                .times(Mat4.translation(0, 12, 30))
+                .times(Mat4.rotation(-Math.PI / 6, 1, 0, 0))
+            )
+            let top = Mat4.inverse(Mat4.identity()
+                .times(Mat4.translation(this.player.x, this.player.y + 60, this.player.z))
+                .times(Mat4.rotation(-Math.PI / 2, 1, 0, 0))
+            );
+            this.desired = this.behind_view ? behind : top
+            program_state.set_camera(this.desired);
+
+            // The parameters of the Light are: position, color, size
+            let light_color = this.show_beam ? color(1.0, 1.0, 0.5, 1) : color(0.33, 0.61, 0.50, 1)
+            let light_strength = this.show_beam ? 100000 : 700
+
+            let light_position = Mat4.identity()
+                .times(Mat4.rotation(time / 300, 1, 0, 0))
+                .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
+                .times(vec4(3, 2, 10, 1));
+
+            program_state.lights = [new Light(light_position, light_color, light_strength)];
+
+
+            this.shapes.ufo.draw(context, program_state, this.ufo_state, this.materials.ufo_material);
+            this.shapes.sky.draw(context, program_state, this.sky_state, this.materials.skybox);
+            this.shapes.floor.draw(context, program_state, this.floor_state, this.materials.floor_material);
+
+            // Draw skyscraper
+            for (let i = 0; i < this.skyscrapers_states.length; i++) {
+                this.skyscrapers_states[i].transformation[1][3] = this.skyscrapers_heights[i];
+                for (let j = 0; j < this.skyscraper_height - 2; j++) {
+                    this.skyscrapers_states[i].transformation[1][3] += this.skyscraper_height + 5;
+                    switch (this.skyscrapers_materials[i]) {
+                        case 0:
+                            this.shapes.skyscraper.draw(context, program_state, this.skyscrapers_states[i].transformation, this.materials.skyscraper_material1);
+                            break;
+                        case 1:
+                            this.shapes.skyscraper.draw(context, program_state, this.skyscrapers_states[i].transformation, this.materials.skyscraper_material2);
+                            break;
+                        case 2:
+                            this.shapes.skyscraper.draw(context, program_state, this.skyscrapers_states[i].transformation, this.materials.skyscraper_material3);
+                            break;
+                    }
+                }
+                if (this.hasPlayerCollided(i)) {
+                    this.crash = true;
+                    this.end_game = true;
+                }
             }
-        }
 
-        // Shadow under UFO
-        let shadow_state = Mat4.identity()
-            .times(Mat4.translation(this.player.x, 0.03, this.player.z))
-            .times(Mat4.scale(this.beam_size, this.beam_size, this.beam_size))
-            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
-
-        // Camera system
-        let behind = Mat4.inverse(Mat4.identity()
-            .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
-            .times(Mat4.rotation(this.camera_angle, 0, 1, 0))
-            .times(Mat4.translation(0, 12, 30))
-            .times(Mat4.rotation(-Math.PI / 6, 1, 0, 0))
-        )
-        let top = Mat4.inverse(Mat4.identity()
-            .times(Mat4.translation(this.player.x, this.player.y + 60, this.player.z))
-            .times(Mat4.rotation(-Math.PI / 2, 1, 0, 0))
-        );
-        this.desired = this.behind_view ? behind : top
-        program_state.set_camera(this.desired);
-
-        // The parameters of the Light are: position, color, size
-        let light_color = this.show_beam ? color(1.0, 1.0, 0.5, 1) : color(0.33, 0.61, 0.50, 1)
-        let light_strength = this.show_beam ? 100000 : 700
-
-        let light_position = Mat4.identity()
-            .times(Mat4.rotation(time / 300, 1, 0, 0))
-            .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
-            .times(vec4(3, 2, 10, 1));
-
-        program_state.lights = [new Light(light_position, light_color, light_strength)];
-
-
-        this.shapes.ufo.draw(context, program_state, this.ufo_state, this.materials.ufo_material);
-        this.shapes.sky.draw(context, program_state, this.sky_state, this.materials.skybox);
-        this.shapes.floor.draw(context, program_state, this.floor_state, this.materials.floor_material);
-
-        // Draw skyscraper
-        for (let i = 0; i < this.skyscrapers_states.length; i++) {
-            this.skyscrapers_states[i].transformation[1][3] = this.skyscrapers_heights[i];
-            for (let j = 0; j < this.skyscraper_height - 2; j++) {
-                this.skyscrapers_states[i].transformation[1][3] += this.skyscraper_height + 5;
-                switch (this.skyscrapers_materials[i]) {
+            // Draw buildings
+            for (let i = 0; i < this.buildings_states.length; i++) {
+                this.buildings_states[i].transformation[1][3] = this.buildings_heights[i];
+                switch (this.buildings_materials[i]) {
                     case 0:
-                        this.shapes.skyscraper.draw(context, program_state, this.skyscrapers_states[i].transformation, this.materials.skyscraper_material1);
+                        this.shapes.building.draw(context, program_state, this.buildings_states[i].transformation, this.materials.building_material1);
                         break;
                     case 1:
-                        this.shapes.skyscraper.draw(context, program_state, this.skyscrapers_states[i].transformation, this.materials.skyscraper_material2);
-                        break;
-                    case 2:
-                        this.shapes.skyscraper.draw(context, program_state, this.skyscrapers_states[i].transformation, this.materials.skyscraper_material3);
+                        this.shapes.building.draw(context, program_state, this.buildings_states[i].transformation, this.materials.building_material2);
                         break;
                 }
             }
-            if (this.hasPlayerCollided(i)) {
-                this.crash = true;
-                this.end_game = true;
+            for (let i= -3; i < 4; i++) {
+                for (let j = -3; j < 4; j++) {
+                    this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.translation(3 + 40 * i, 4.5, 4 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)), this.materials.lamp_mat);
+                    this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.translation(-3 + 40 * i, 4.5, 4 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)).times(Mat4.rotation(Math.PI, 0, 1, 0)), this.materials.lamp_mat);
+                    this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.translation(3 + 40 * i, 4.5, -4 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)), this.materials.lamp_mat);
+                    this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.translation(-3 + 40 * i, 4.5, -4 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)).times(Mat4.rotation(Math.PI, 0, 1, 0)), this.materials.lamp_mat);
+                }
             }
-        }
 
-        // Draw buildings
-        for (let i = 0; i < this.buildings_states.length; i++) {
-            this.buildings_states[i].transformation[1][3] = this.buildings_heights[i];
-            switch (this.buildings_materials[i]) {
-                case 0:
-                    this.shapes.building.draw(context, program_state, this.buildings_states[i].transformation, this.materials.building_material1);
-                    break;
-                case 1:
-                    this.shapes.building.draw(context, program_state, this.buildings_states[i].transformation, this.materials.building_material2);
-                    break;
+            for (let i= -3; i < 4; i++) {
+                for (let j = -3; j < 4; j++) {
+                    this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.rotation(Math.PI/2, 0, 1, 0)).times(Mat4.translation(3 + 40 * i, 4.5, 4 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)), this.materials.lamp_mat);
+                    this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.rotation(Math.PI/2, 0, 1, 0)).times(Mat4.translation(-3 + 40 * i, 4.5, 4 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)).times(Mat4.rotation(Math.PI, 0, 1, 0)), this.materials.lamp_mat);
+                    this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.rotation(Math.PI/2, 0, 1, 0)).times(Mat4.translation(3 + 40 * i, 4.5, -4 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)), this.materials.lamp_mat);
+                    this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.rotation(Math.PI/2, 0, 1, 0)).times(Mat4.translation(-3 + 40 * i, 4.5, -4 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)).times(Mat4.rotation(Math.PI, 0, 1, 0)), this.materials.lamp_mat);
+                }
             }
-        }
-        for (let i= -3; i < 4; i++) {
-            for (let j = -3; j < 4; j++) {
-                this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.translation(3 + 40 * i, 4.5, 4 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)), this.materials.lamp_mat);
-                this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.translation(-3 + 40 * i, 4.5, 4 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)).times(Mat4.rotation(Math.PI, 0, 1, 0)), this.materials.lamp_mat);
-                this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.translation(3 + 40 * i, 4.5, -4 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)), this.materials.lamp_mat);
-                this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.translation(-3 + 40 * i, 4.5, -4 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)).times(Mat4.rotation(Math.PI, 0, 1, 0)), this.materials.lamp_mat);
-            }
-        }
 
-        for (let i= -3; i < 4; i++) {
-            for (let j = -3; j < 4; j++) {
-                this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.rotation(Math.PI/2, 0, 1, 0)).times(Mat4.translation(3 + 40 * i, 4.5, 4 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)), this.materials.lamp_mat);
-                this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.rotation(Math.PI/2, 0, 1, 0)).times(Mat4.translation(-3 + 40 * i, 4.5, 4 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)).times(Mat4.rotation(Math.PI, 0, 1, 0)), this.materials.lamp_mat);
-                this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.rotation(Math.PI/2, 0, 1, 0)).times(Mat4.translation(3 + 40 * i, 4.5, -4 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)), this.materials.lamp_mat);
-                this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.rotation(Math.PI/2, 0, 1, 0)).times(Mat4.translation(-3 + 40 * i, 4.5, -4 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)).times(Mat4.rotation(Math.PI, 0, 1, 0)), this.materials.lamp_mat);
-            }
-        }
-
-        // Draw roads
-        let x_pos_road = -this.world_size + 40;
-        for (let i = 0; i < 7; i++) {
-            x_pos_road = x_pos_road + 40;
-            this.road_state = Mat4.identity()
-                .times(Mat4.translation(x_pos_road, 0.01, 0))
-                .times(Mat4.scale(4, this.world_size, 120))
-                .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
-
-            this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
-
-            let dash_pos = -120 + 1.4; // -4.5 + 3.1
-            for (let k = 0; k < 6; k++) {
+            // Draw roads
+            let x_pos_road = -this.world_size + 40;
+            for (let i = 0; i < 7; i++) {
+                x_pos_road = x_pos_road + 40;
                 this.road_state = Mat4.identity()
-                    .times(Mat4.translation(x_pos_road + 3.5, 0.02, dash_pos + 18.5))
-                    .times(Mat4.scale(.075, this.world_size, 16.5))
+                    .times(Mat4.translation(x_pos_road, 0.01, 0))
+                    .times(Mat4.scale(4, this.world_size, 120))
                     .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
 
-                this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
+                this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
 
-                this.road_state = Mat4.identity()
-                    .times(Mat4.translation(x_pos_road + 4.5, 0.02, dash_pos + 18.5))
-                    .times(Mat4.scale(.5, this.world_size, 16))
-                    .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
-
-                this.shapes.road.draw(context, program_state, this.road_state, this.materials.sidewalk_material);
-
-                this.road_state = Mat4.identity()
-                    .times(Mat4.translation(x_pos_road - 4.5, 0.02, dash_pos + 18.5))
-                    .times(Mat4.scale(.5, this.world_size, 16))
-                    .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
-
-                this.shapes.road.draw(context, program_state, this.road_state, this.materials.sidewalk_material);
-
-                this.road_state = Mat4.identity()
-                    .times(Mat4.translation(x_pos_road - 3.5, 0.02, dash_pos + 18.5))
-                    .times(Mat4.scale(.075, this.world_size, 16.5))
-                    .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
-
-                this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
-
-                for (let j = 0; j < 11; j++) {
-                    dash_pos += 3.1;
+                let dash_pos = -120 + 1.4; // -4.5 + 3.1
+                for (let k = 0; k < 6; k++) {
                     this.road_state = Mat4.identity()
-                        .times(Mat4.translation(x_pos_road, 0.02, dash_pos))
-                        .times(Mat4.scale(.2, this.world_size, .5))
+                        .times(Mat4.translation(x_pos_road + 3.5, 0.02, dash_pos + 18.5))
+                        .times(Mat4.scale(.075, this.world_size, 16.5))
                         .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
 
-                    this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_yellow_material);
-                }
-                dash_pos += 5.9;
-            }
-        }
+                    this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
 
-        let z_pos_road = -this.world_size + 40;
-        for (let i = 0; i < 7; i++) {
-            z_pos_road = z_pos_road + 40;
-            this.road_state = Mat4.identity()
-                .times(Mat4.translation(0, 0.01, z_pos_road))
-                .times(Mat4.scale(120, this.world_size, 4))
-                .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
-            this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
-
-            let dash_pos = -120 + 1.4; // -4.5 + 3.1
-            for (let k = 0; k < 6; k++) {
-                this.road_state = Mat4.identity()
-                    .times(Mat4.translation(dash_pos + 18.5, 0.02, z_pos_road + 3.5))
-                    .times(Mat4.scale(16.5, this.world_size, 0.075))
-                    .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
-
-                this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
-
-                this.road_state = Mat4.identity()
-                    .times(Mat4.translation(dash_pos + 18.5, 0.02, z_pos_road + 4.5))
-                    .times(Mat4.scale(15.25, this.world_size, .5))
-                    .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
-
-                this.shapes.road.draw(context, program_state, this.road_state, this.materials.sidewalk_material);
-
-                this.road_state = Mat4.identity()
-                    .times(Mat4.translation(dash_pos + 18.5, 0.02, z_pos_road - 4.5))
-                    .times(Mat4.scale(15.25, this.world_size, .5))
-                    .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
-
-                this.shapes.road.draw(context, program_state, this.road_state, this.materials.sidewalk_material);
-
-                this.road_state = Mat4.identity()
-                    .times(Mat4.translation(dash_pos + 18.5, 0.02, z_pos_road - 3.5))
-                    .times(Mat4.scale(16.5, this.world_size, 0.075))
-                    .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
-
-                this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
-
-                for (let j = 0; j < 11; j++) {
-                    dash_pos += 3.1;
                     this.road_state = Mat4.identity()
-                        .times(Mat4.translation(dash_pos, 0.02, z_pos_road))
-                        .times(Mat4.scale(.5, this.world_size, .2))
+                        .times(Mat4.translation(x_pos_road + 4.5, 0.02, dash_pos + 18.5))
+                        .times(Mat4.scale(.5, this.world_size, 16))
                         .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
 
-                    this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_yellow_material);
-                }
-                dash_pos += 5.9;
-            }
-        }
+                    this.shapes.road.draw(context, program_state, this.road_state, this.materials.sidewalk_material);
 
-        // corners of road
-        this.road_state = Mat4.identity().times(Mat4.translation(-122, .01, -122)).times(Mat4.scale(2, this.world_size, 2)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
-        this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
+                    this.road_state = Mat4.identity()
+                        .times(Mat4.translation(x_pos_road - 4.5, 0.02, dash_pos + 18.5))
+                        .times(Mat4.scale(.5, this.world_size, 16))
+                        .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
 
-        this.road_state = Mat4.identity().times(Mat4.translation(122, .01, -122)).times(Mat4.scale(2, this.world_size, 2)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
-        this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
+                    this.shapes.road.draw(context, program_state, this.road_state, this.materials.sidewalk_material);
 
-        this.road_state = Mat4.identity().times(Mat4.translation(-122, .01, 122)).times(Mat4.scale(2, this.world_size, 2)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
-        this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
+                    this.road_state = Mat4.identity()
+                        .times(Mat4.translation(x_pos_road - 3.5, 0.02, dash_pos + 18.5))
+                        .times(Mat4.scale(.075, this.world_size, 16.5))
+                        .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
 
-        this.road_state = Mat4.identity().times(Mat4.translation(122, .01, 122)).times(Mat4.scale(2, this.world_size, 2)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
-        this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
+                    this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
 
-        // borders for edges
-        this.road_state = Mat4.identity()
-            .times(Mat4.translation(-123.5, 0.02, 0))
-            .times(Mat4.scale(0.075, this.world_size, 123.5))
-            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
-        this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
+                    for (let j = 0; j < 11; j++) {
+                        dash_pos += 3.1;
+                        this.road_state = Mat4.identity()
+                            .times(Mat4.translation(x_pos_road, 0.02, dash_pos))
+                            .times(Mat4.scale(.2, this.world_size, .5))
+                            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
 
-        this.road_state = Mat4.identity()
-            .times(Mat4.translation(123.5, 0.02, 0))
-            .times(Mat4.scale(0.075, this.world_size, 123.5))
-            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
-        this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
-
-        this.road_state = Mat4.identity()
-            .times(Mat4.translation(0, 0.02, -123.5))
-            .times(Mat4.scale(123.5, this.world_size, 0.075))
-            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
-        this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
-
-        this.road_state = Mat4.identity()
-            .times(Mat4.translation(0, 0.02, 123.5))
-            .times(Mat4.scale(123.5, this.world_size, 0.075))
-            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
-        this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
-
-        // borders for sidewalk
-        this.road_state = Mat4.identity()
-            .times(Mat4.translation(124.5, 0.02, 0))
-            .times(Mat4.scale(.5, this.world_size, 125))
-            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
-
-        this.shapes.road.draw(context, program_state, this.road_state, this.materials.sidewalk_material);
-
-        this.road_state = Mat4.identity()
-            .times(Mat4.translation(-124.5, 0.02, 0))
-            .times(Mat4.scale(.5, this.world_size, 125))
-            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
-
-        this.shapes.road.draw(context, program_state, this.road_state, this.materials.sidewalk_material);
-
-        this.road_state = Mat4.identity()
-            .times(Mat4.translation(0, 0.02, 124.5))
-            .times(Mat4.scale(125, this.world_size, .5))
-            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
-
-        this.shapes.road.draw(context, program_state, this.road_state, this.materials.sidewalk_material);
-
-        this.road_state = Mat4.identity()
-            .times(Mat4.translation(0, 0.02, -124.5))
-            .times(Mat4.scale(125, this.world_size, .5))
-            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
-
-        this.shapes.road.draw(context, program_state, this.road_state, this.materials.sidewalk_material);
-
-        // Draw cows
-        let cows_animating = this.is_animating(program_state)
-        if (cows_animating) {
-            for (let i = 0; i < cows_animating.length; i++) {
-                this.animate_cow(cows_animating[i], program_state)
-                if (this.cows_states[cows_animating[i]].y >= this.player.y - 3) {
-                    this.cows_states = this.cows_states.filter(item => item !== this.cows_states[cows_animating[i]]);
-                    this.score += 50;
-                    this.show_beam = false;
+                        this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_yellow_material);
+                    }
+                    dash_pos += 5.9;
                 }
             }
-        } else {
-            this.show_beam = this.beaming = false;
-        }
-        for (let i = 0; i < this.cows_states.length; i++) {
-            if (this.cows_states[i].angle === 0) {
-                this.shapes.cow.draw(context, program_state, this.cows_states[i].transformation, this.materials.cow_material);
+
+            let z_pos_road = -this.world_size + 40;
+            for (let i = 0; i < 7; i++) {
+                z_pos_road = z_pos_road + 40;
+                this.road_state = Mat4.identity()
+                    .times(Mat4.translation(0, 0.01, z_pos_road))
+                    .times(Mat4.scale(120, this.world_size, 4))
+                    .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+                this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
+
+                let dash_pos = -120 + 1.4; // -4.5 + 3.1
+                for (let k = 0; k < 6; k++) {
+                    this.road_state = Mat4.identity()
+                        .times(Mat4.translation(dash_pos + 18.5, 0.02, z_pos_road + 3.5))
+                        .times(Mat4.scale(16.5, this.world_size, 0.075))
+                        .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+                    this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
+
+                    this.road_state = Mat4.identity()
+                        .times(Mat4.translation(dash_pos + 18.5, 0.02, z_pos_road + 4.5))
+                        .times(Mat4.scale(15.25, this.world_size, .5))
+                        .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+                    this.shapes.road.draw(context, program_state, this.road_state, this.materials.sidewalk_material);
+
+                    this.road_state = Mat4.identity()
+                        .times(Mat4.translation(dash_pos + 18.5, 0.02, z_pos_road - 4.5))
+                        .times(Mat4.scale(15.25, this.world_size, .5))
+                        .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+                    this.shapes.road.draw(context, program_state, this.road_state, this.materials.sidewalk_material);
+
+                    this.road_state = Mat4.identity()
+                        .times(Mat4.translation(dash_pos + 18.5, 0.02, z_pos_road - 3.5))
+                        .times(Mat4.scale(16.5, this.world_size, 0.075))
+                        .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+                    this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
+
+                    for (let j = 0; j < 11; j++) {
+                        dash_pos += 3.1;
+                        this.road_state = Mat4.identity()
+                            .times(Mat4.translation(dash_pos, 0.02, z_pos_road))
+                            .times(Mat4.scale(.5, this.world_size, .2))
+                            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+                        this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_yellow_material);
+                    }
+                    dash_pos += 5.9;
+                }
+            }
+
+            // corners of road
+            this.road_state = Mat4.identity().times(Mat4.translation(-122, .01, -122)).times(Mat4.scale(2, this.world_size, 2)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+            this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
+
+            this.road_state = Mat4.identity().times(Mat4.translation(122, .01, -122)).times(Mat4.scale(2, this.world_size, 2)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+            this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
+
+            this.road_state = Mat4.identity().times(Mat4.translation(-122, .01, 122)).times(Mat4.scale(2, this.world_size, 2)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+            this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
+
+            this.road_state = Mat4.identity().times(Mat4.translation(122, .01, 122)).times(Mat4.scale(2, this.world_size, 2)).times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+            this.shapes.road.draw(context, program_state, this.road_state, this.materials.road_material);
+
+            // borders for edges
+            this.road_state = Mat4.identity()
+                .times(Mat4.translation(-123.5, 0.02, 0))
+                .times(Mat4.scale(0.075, this.world_size, 123.5))
+                .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+            this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
+
+            this.road_state = Mat4.identity()
+                .times(Mat4.translation(123.5, 0.02, 0))
+                .times(Mat4.scale(0.075, this.world_size, 123.5))
+                .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+            this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
+
+            this.road_state = Mat4.identity()
+                .times(Mat4.translation(0, 0.02, -123.5))
+                .times(Mat4.scale(123.5, this.world_size, 0.075))
+                .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+            this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
+
+            this.road_state = Mat4.identity()
+                .times(Mat4.translation(0, 0.02, 123.5))
+                .times(Mat4.scale(123.5, this.world_size, 0.075))
+                .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+            this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
+
+            // borders for sidewalk
+            this.road_state = Mat4.identity()
+                .times(Mat4.translation(124.5, 0.02, 0))
+                .times(Mat4.scale(.5, this.world_size, 125))
+                .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+            this.shapes.road.draw(context, program_state, this.road_state, this.materials.sidewalk_material);
+
+            this.road_state = Mat4.identity()
+                .times(Mat4.translation(-124.5, 0.02, 0))
+                .times(Mat4.scale(.5, this.world_size, 125))
+                .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+            this.shapes.road.draw(context, program_state, this.road_state, this.materials.sidewalk_material);
+
+            this.road_state = Mat4.identity()
+                .times(Mat4.translation(0, 0.02, 124.5))
+                .times(Mat4.scale(125, this.world_size, .5))
+                .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+            this.shapes.road.draw(context, program_state, this.road_state, this.materials.sidewalk_material);
+
+            this.road_state = Mat4.identity()
+                .times(Mat4.translation(0, 0.02, -124.5))
+                .times(Mat4.scale(125, this.world_size, .5))
+                .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+            this.shapes.road.draw(context, program_state, this.road_state, this.materials.sidewalk_material);
+
+            // Draw cows
+            let cows_animating = this.is_animating(program_state)
+            if (cows_animating) {
+                for (let i = 0; i < cows_animating.length; i++) {
+                    this.animate_cow(cows_animating[i], program_state)
+                    if (this.cows_states[cows_animating[i]].y >= this.player.y - 3) {
+                        this.cows_states = this.cows_states.filter(item => item !== this.cows_states[cows_animating[i]]);
+                        this.score += 50;
+                        this.show_beam = false;
+                    }
+                }
             } else {
-                let transformation = Mat4.identity()
-                    .times(Mat4.translation(this.cows_states[i].x, this.cows_states[i].y, this.cows_states[i].z))
-                    .times(Mat4.rotation(-this.cows_states[i].rotAngle, 0, 1, 0))
-                    .times(Mat4.rotation(this.cows_states[i].angle, 0, 1, 0));
-                this.shapes.cow.draw(context, program_state, transformation, this.materials.cow_material);
+                this.show_beam = this.beaming = false;
             }
-        }
+            for (let i = 0; i < this.cows_states.length; i++) {
+                if (this.cows_states[i].angle === 0) {
+                    this.shapes.cow.draw(context, program_state, this.cows_states[i].transformation, this.materials.cow_material);
+                } else {
+                    let transformation = Mat4.identity()
+                        .times(Mat4.translation(this.cows_states[i].x, this.cows_states[i].y, this.cows_states[i].z))
+                        .times(Mat4.rotation(-this.cows_states[i].rotAngle, 0, 1, 0))
+                        .times(Mat4.rotation(this.cows_states[i].angle, 0, 1, 0));
+                    this.shapes.cow.draw(context, program_state, transformation, this.materials.cow_material);
+                }
+            }
 
 
-        // Draw light beam conditionally
-        if (this.show_beam) {
-            let beam_state = Mat4.identity()
-                .times(Mat4.translation(this.player.x, this.player.y - this.beam_height, this.player.z))
-                .times(Mat4.scale(this.beam_size, this.beam_height, this.beam_size))
-                .times(Mat4.rotation(3 * Math.PI / 2, 1, 0, 0))
-                .times(this.beam_offset);
+            // Draw light beam conditionally
+            if (this.show_beam) {
+                let beam_state = Mat4.identity()
+                    .times(Mat4.translation(this.player.x, this.player.y - this.beam_height, this.player.z))
+                    .times(Mat4.scale(this.beam_size, this.beam_height, this.beam_size))
+                    .times(Mat4.rotation(3 * Math.PI / 2, 1, 0, 0))
+                    .times(this.beam_offset);
 
-            this.animate_ufo_beam(program_state);
-            this.shapes.beam.draw(context, program_state, beam_state, this.materials.light_material);
-        } else if (!this.end_game) {
-            this.shapes.shadow.draw(context, program_state, shadow_state, this.materials.shadow_material);
-            this.capture_local_time = time;
-            this.beam_offset = Mat4.identity();
-        } else {
+                this.animate_ufo_beam(program_state);
+                this.shapes.beam.draw(context, program_state, beam_state, this.materials.light_material);
+            } else if (!this.end_game) {
+                this.shapes.shadow.draw(context, program_state, shadow_state, this.materials.shadow_material);
+                this.capture_local_time = time;
+                this.beam_offset = Mat4.identity();
+            } else {
+            }
         }
     }
 }

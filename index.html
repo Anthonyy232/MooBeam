@@ -5,14 +5,26 @@
     <link href="assets/fav.ico" rel="icon">
     <title>MooBeam</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Press+Start+2P">
     <style>
         body {
             font-family: 'Roboto', sans-serif;
         }
         .canvas-widget {
+            position: relative;
+        }
+        #end-game, #crash-game {
             position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: auto;
+            width: 75%;
+            height: 75%;
+            display: none;
+            font-size: 50px;
+            text-align: center;
         }
         .top-corner {
             position: absolute;
@@ -28,13 +40,16 @@
 </head>
 
 <body style="background: #ACBFA4">
+
 <div class="canvas-widget" id="main-canvas">
+    <div id="end-game" style="display: none; font-size: 30px; text-align: center; color: white; font-family: 'Press Start 2P', cursive;">
+        <p id="end_score"></p>
+    </div>
+    <div id="crash-game" style="display: none; font-size: 30px; text-align: center; color: red; font-family: 'Press Start 2P', cursive;">
+        <p id="crash_score"></p>
+    </div>
     <div class="top-corner left" style="background-color: rgba(51, 51, 51, 0.5);">Score |  <span id="score">0</span></div>
     <div class="top-corner right" style="background-color: rgba(51, 51, 51, 0.5);">Time |  <span id="timer">1:30</span></div>
-</div>
-
-<div id="end-game" class="right" style="display: none;">
-    <span id="show-message"></span>
 </div>
 
 <script type=module>
