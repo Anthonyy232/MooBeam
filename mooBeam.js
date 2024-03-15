@@ -483,33 +483,27 @@ export class MooBeam extends Scene {
     }
 
     animate_ufo_crash(program_state) {
-        let local_time = program_state.animation_time/1000 - this.final_local_time;
-        //console.log(local_time);
-
-        //animation broken down in chronological order
-        if (local_time > 0 && local_time <= 0.2) {
-            //this.ufo_state = this.ufo_state.times(Mat4.rotation(0.07, 1, 1,0))
-        }
-        if (local_time > 0.0 && local_time < 1) {
-            //this.ufo_state = this.ufo_state.times(Mat4.translation(0, 0.04, 0))
-            this.ufo_state = this.ufo_state.times(Mat4.rotation(0.3, 0.5, 1,0))
-            //this.ufo_state = this.ufo_state.times(Mat4.rotation(0.1, 1, 0,0))
-
-        }
-        if (local_time >= 1 && local_time < 2.27) {
-            //this.ufo_state = this.ufo_state.times(Mat4.translation(0, -0.1*local_time**2+5 , 0))
-            this.ufo_state = Mat4.identity().times(Mat4.translation(this.player.x, this.player.y, this.player.z))
-                .times(Mat4.translation(0, -2*(local_time*2.2-4)**2+2 , 0))
-                .times(Mat4.rotation(local_time*6, 0,1 , 0))
-                .times(Mat4.rotation(0.5, 1,0 , 0))
-
-
+        let local_time = program_state.animation_time / 1000 - this.final_local_time;
+        if (this.player.y > 7) {
+            //animation broken down in chronological order
+            if (local_time > 0.0 && local_time < 0.8) {
+                this.ufo_state = this.ufo_state.times(Mat4.rotation(0.2, 0.4, 1, 0))
+            }
+            if (local_time >= 0.8 && local_time < 10) {
+                this.ufo_state = Mat4.identity().times(Mat4.translation(this.player.x, this.player.y, this.player.z))
+                    .times(Mat4.translation(0, -2 * (local_time * 2.1 - 2.8) ** 2 + 2, 0))
+                    .times(Mat4.rotation(local_time * 6, 0, 1, 0))
+                    .times(Mat4.rotation(0.5, 1, 0, 0))
+                if (local_time > 1.5) {
+                    this.player.y -= 0.5;
+                }
+            }
+        } else {
+            this.player.y = 7;
         }
     }
     animate_ufo_beam(program_state) {
         let local_time = program_state.animation_time/1000 - this.capture_local_time;
-        console.log(local_time);
-
         //animation broken down in chronological order 1.29 seconds total
         if (local_time > 0.0) {
             this.ufo_state = this.ufo_state.times(Mat4.rotation(0.3, 0, 1,0))
@@ -763,7 +757,6 @@ export class MooBeam extends Scene {
         if (this.end_game) {
             if (this.crash) {
                 displayEnd(true, this.score)
-                this.behind_view = false;
                 this.animate_ufo_crash(program_state);
 
                 let local_time = program_state.animation_time/1000 - this.final_local_time - 2.27 - 0.75; // 0.75 is time between hitting floor and explosion
