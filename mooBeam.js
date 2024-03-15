@@ -117,6 +117,7 @@ export class MooBeam extends Scene {
             if(this.time > 0 && !this.end_game) {
                 --this.time;
             } else {
+                this.end_game = true;
                 clearInterval(timer);
                 this.time = 0;
             }
