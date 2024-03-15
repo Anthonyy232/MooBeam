@@ -177,7 +177,7 @@ export class MooBeam extends Scene {
         this.camera_angle = 0;
         this.beam_height = 10;
         this.beam_size = 5;
-        this.cows_count = 100;
+        this.cows_count = 150;
         this.cow_size = 2;
         this.cows_states = this.generateCows();
         this.initial_camera_location = Mat4.look_at(vec3(0, 10 + this.starting_location.y, 20), vec3(0, this.starting_location.y, 0), vec3(0, 1 + this.starting_location.y, 0));
@@ -396,8 +396,8 @@ export class MooBeam extends Scene {
             let z = 0;
             let rotAngle = Math.random() * (2 * Math.PI);
             while (inside) {
-                x = Math.random() * 200 - 100;
-                z = Math.random() * 200 - 100;
+                x = Math.random() * 240 - 120;
+                z = Math.random() * 240 - 120;
                 if (!this.cowInSkyscraper(x, z)) { inside = false; }
                 if (!this.cowInBuilding(x, z)) { inside = false; }
             }
@@ -465,7 +465,9 @@ export class MooBeam extends Scene {
         } else { return false; }
     }
 
-    hasEscapedBounds() { return Math.sqrt(this.player.x**2 + this.player.z**2) > this.world_size; }
+    hasEscapedBounds() {
+        return Math.sqrt(this.player.x**2 + this.player.z**2) > this.world_size-this.ufo_radius-2;
+    }
 
     animate_cow(i, program_state) {
         let speed = 0.0008;
@@ -687,9 +689,6 @@ export class MooBeam extends Scene {
             if (Math.abs(this.player.velocity.z) > this.player.max_speed) {
                 this.player.velocity.z = -this.player.max_speed;
             }
-            if (this.hasEscapedBounds()) {
-                this.end_game = true;
-            }
         }
     }
 
@@ -700,9 +699,6 @@ export class MooBeam extends Scene {
             this.player.velocity.z += this.player.acceleration.z;
             if (Math.abs(this.player.velocity.z) > this.player.max_speed) {
                 this.player.velocity.z = this.player.max_speed
-            }
-            if (this.hasEscapedBounds()) {
-                this.end_game = true;
             }
         }
     }
@@ -715,9 +711,6 @@ export class MooBeam extends Scene {
             if (Math.abs(this.player.velocity.x) > this.player.max_speed) {
                 this.player.velocity.x = -this.player.max_speed
             }
-            if (this.hasEscapedBounds()) {
-                this.end_game = true;
-            }
         }
     }
 
@@ -728,9 +721,6 @@ export class MooBeam extends Scene {
             this.player.velocity.x += this.player.acceleration.x;
             if (Math.abs(this.player.velocity.x) > this.player.max_speed) {
                 this.player.velocity.x = this.player.max_speed
-            }
-            if (this.hasEscapedBounds()) {
-                this.end_game = true;
             }
         }
     }
@@ -767,6 +757,10 @@ export class MooBeam extends Scene {
         }
 
         if (!this.show_dark) {
+            if (this.hasEscapedBounds()) {
+                this.player.velocity.z = -this.player.velocity.z;
+                this.player.velocity.x = -this.player.velocity.x;
+            }
             // Movement system
             if (this.end_game) {
                 if (this.crash) {
