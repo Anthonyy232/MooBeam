@@ -209,7 +209,7 @@ export class MooBeam extends Scene {
                 texture: new Texture("assets/explosion.jpg")
             }),
             explosion_gray_material: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#D3D3D3"), ambient: 0.7, diffusivity: 0.1, specularity: 0,
+                color: hex_color("#A9A9A9"), ambient: 0.7, diffusivity: 0.1, specularity: 0,
                 texture: new Texture("assets/explosion.jpg")
             }),
             explosion_black_material: new Material(new defs.Fake_Bump_Map(1), {
@@ -847,7 +847,7 @@ export class MooBeam extends Scene {
                     this.shapes.explosion.draw(context, program_state, this.explosion_state5, this.materials.explosion_black_material);
                 }
 
-                if (local_time >= 4 && local_time < 5) {
+                if (local_time >= 4 && local_time < 6) {
                     this.explosion_state1 = this.explosion_state1.times(Mat4.scale(1.001, 1.001, 1.001));
                     this.explosion_state2 = this.explosion_state2.times(Mat4.scale(1.001, 1.001, 1.001));
                     this.explosion_state3 = this.explosion_state3.times(Mat4.scale(1.001, 1.001, 1.001));
@@ -855,17 +855,6 @@ export class MooBeam extends Scene {
                     this.explosion_state5 = this.explosion_state5.times(Mat4.scale(1.001, 1.001, 1.001));
 
                     this.shapes.explosion.draw(context, program_state, this.explosion_state3, this.materials.explosion_black_material);
-                    this.shapes.explosion.draw(context, program_state, this.explosion_state4, this.materials.explosion_gray_material);
-                    this.shapes.explosion.draw(context, program_state, this.explosion_state5, this.materials.explosion_black_material);
-                }
-
-                if (local_time >= 5 && local_time < 6) {
-                    this.explosion_state1 = this.explosion_state1.times(Mat4.scale(1.001, 1.001, 1.001));
-                    this.explosion_state2 = this.explosion_state2.times(Mat4.scale(1.001, 1.001, 1.001));
-                    this.explosion_state3 = this.explosion_state3.times(Mat4.scale(1.001, 1.001, 1.001));
-                    this.explosion_state4 = this.explosion_state4.times(Mat4.scale(1.001, 1.001, 1.001));
-                    this.explosion_state5 = this.explosion_state5.times(Mat4.scale(1.001, 1.001, 1.001));
-
                     this.shapes.explosion.draw(context, program_state, this.explosion_state4, this.materials.explosion_gray_material);
                     this.shapes.explosion.draw(context, program_state, this.explosion_state5, this.materials.explosion_black_material);
                 }
