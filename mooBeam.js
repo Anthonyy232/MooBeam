@@ -249,25 +249,30 @@ export class MooBeam extends Scene {
             dash_yellow_material: new Material(new defs.Phong_Shader(), {
                 color: hex_color("#78640c"), ambient: 1, diffusivity: 1, specularity: 1
             }),
-            skyscraper_material1: new Material(new defs.Fake_Bump_Map(1), {
+            skyscraper_material1: new Material(new defs.Skyscraper_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 0.4, diffusivity: 1, specularity: 1,
-                texture: new Texture("assets/skyscraper1.jpg")
+                texture: new Texture("assets/skyscraper1.jpg"),
+                normal: new Texture("assets/normal.jpg")
             }),
-            skyscraper_material2: new Material(new defs.Fake_Bump_Map(1), {
+            skyscraper_material2: new Material(new defs.Skyscraper_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 0.56, diffusivity: 1, specularity: 1,
-                texture: new Texture("assets/skyscraper2.png")
+                texture: new Texture("assets/skyscraper2.png"),
+                normal: new Texture("assets/normal.jpg")
             }),
-            skyscraper_material3: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#000000"), ambient: 0.43, diffusivity: 1, specularity: 1,
-                texture: new Texture("assets/skyscraper3.png")
+            skyscraper_material3: new Material(new defs.Skyscraper_Bump_Map(1), {
+                color: hex_color("#000000"), ambient: 0.43, diffusivity: 1, specularity: 0.7,
+                texture: new Texture("assets/skyscraper3.png"),
+                normal: new Texture("assets/normal.jpg")
             }),
-            building_material1: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#36454F"), ambient: 0.4, diffusivity: 0.5, specularity: 1,
-                texture: new Texture("assets/skyscraper4.png")
+            building_material1: new Material(new defs.Skyscraper_Bump_Map(1), {
+                color: hex_color("#36454F"), ambient: 0.4, diffusivity: 0.5, specularity: 0.7,
+                texture: new Texture("assets/skyscraper4.png"),
+                normal: new Texture("assets/normal.jpg")
             }),
-            building_material2: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#36454F"), ambient: 0.6, diffusivity: 0.5, specularity: 1,
-                texture: new Texture("assets/skyscraper5.png")
+            building_material2: new Material(new defs.Skyscraper_Bump_Map(1), {
+                color: hex_color("#36454F"), ambient: 0.6, diffusivity: 0.5, specularity: 0.7,
+                texture: new Texture("assets/skyscraper5.png"),
+                normal: new Texture("assets/normal.jpg")
             }),
             lamp_mat: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#36454F"), ambient: 0.6, diffusivity: 0.1, specularity: 1,
@@ -892,7 +897,7 @@ export class MooBeam extends Scene {
 
             // The parameters of the Light are: position, color, size
             let light_color = this.show_beam ? color(1.0, 1.0, 0.5, 1) : color(0.33, 0.61, 0.50, 1)
-            let light_strength = this.show_beam ? 100000 : 700
+            let light_strength = this.show_beam ? 5000 : 700
 
             let light_position = Mat4.identity()
                 .times(Mat4.rotation(time / 300, 1, 0, 0))

@@ -802,6 +802,30 @@ const Fake_Bump_Map = defs.Fake_Bump_Map =
         }
     }
 
+const Skyscraper_Bump_Map = defs.Skyscraper_Bump_Map =
+    class Skyscraper_Bump_Map extends Textured_Phong {
+        fragment_glsl_code() {
+            // ********* FRAGMENT SHADER *********
+            return this.shared_glsl_code() + `
+                varying vec2 f_tex_coord;
+                uniform sampler2D texture;
+                uniform sampler2D normal;
+
+                void main(){
+                    vec4 tex_color = texture2D( texture, f_tex_coord );
+                    if( tex_color.w < .01 ) discard;
+
+                    // [0,1] to [-1,1]
+                    vec3 sampled = texture2D(normal, f_tex_coord).rgb * 2.0 - 1.0;
+
+                    // Compute an initial (ambient) color:
+                    gl_FragColor = vec4( ( tex_color.xyz + shape_color.xyz ) * ambient, shape_color.w * tex_color.w ); 
+
+                    // Compute the final color with contributions from lights, using the sampled normal:
+                    gl_FragColor.xyz += phong_model_lights( normalize( sampled ), vertex_worldspace );
+                } `;
+        }
+    }
 
 const Movement_Controls = defs.Movement_Controls =
     class Movement_Controls extends Scene {
