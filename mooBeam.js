@@ -496,7 +496,7 @@ export class MooBeam extends Scene {
             //this.ufo_state = this.ufo_state.times(Mat4.rotation(0.1, 1, 0,0))
 
         }
-        if (local_time >= 1 && local_time < 2 ) {
+        if (local_time >= 1 && local_time < 2.27) {
             //this.ufo_state = this.ufo_state.times(Mat4.translation(0, -0.1*local_time**2+5 , 0))
             this.ufo_state = Mat4.identity().times(Mat4.translation(this.player.x, this.player.y, this.player.z))
                 .times(Mat4.translation(0, -2*(local_time*2.2-4)**2+2 , 0))
@@ -766,7 +766,7 @@ export class MooBeam extends Scene {
                 this.behind_view = false;
                 this.animate_ufo_crash(program_state);
 
-                let local_time = program_state.animation_time/1000 - this.final_local_time - 2;
+                let local_time = program_state.animation_time/1000 - this.final_local_time - 2.27 - 0.75; // 0.5 is time between hitting floor and explosion
                 if (local_time >= 0 && local_time < 1) {
                     this.explosion_state1 = Mat4.identity()
                         .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
