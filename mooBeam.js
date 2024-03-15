@@ -117,6 +117,7 @@ export class MooBeam extends Scene {
             if(this.time > 0 && !this.end_game) {
                 --this.time;
             } else {
+                this.end_game = true;
                 clearInterval(timer);
                 this.time = 0;
             }
@@ -818,6 +819,8 @@ export class MooBeam extends Scene {
                     break;
             }
         }
+
+        // Draw lamps
         for (let i= -3; i < 6; i++) {
             for (let j = -3; j < 6; j++) {
                 this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.translation(3 + 40 * i, 4.5, 5 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)), this.materials.lamp_mat);
