@@ -818,8 +818,8 @@ export class MooBeam extends Scene {
                     break;
             }
         }
-        for (let i= -3; i < 6; i++) {
-            for (let j = -3; j < 6; j++) {
+        for (let i= -3; i < 4; i++) {
+            for (let j = -3; j < 4; j++) {
                 this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.translation(3 + 40 * i, 4.5, 5 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)), this.materials.lamp_mat);
                 this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.translation(-3 + 40 * i, 4.5, 5 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)).times(Mat4.rotation(Math.PI, 0, 1, 0)), this.materials.lamp_mat);
                 this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.translation(3 + 40 * i, 4.5, -4 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)), this.materials.lamp_mat);
