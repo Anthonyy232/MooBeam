@@ -185,7 +185,7 @@ export class MooBeam extends Scene {
                 texture: new Texture("assets/ufo.jpg")
             }),
             shadow_material: new Material(new defs.Phong_Shader(1), {
-                color: hex_color("#000000", 0.97), ambient: 0.1, diffusivity: 0, specularity: 0,
+                color: hex_color("#000000", 0.89), ambient: 0.1, diffusivity: 0, specularity: 0,
             }),
             cow_material: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 0.7, diffusivity: 0.5, specularity: 0.5,
@@ -200,13 +200,16 @@ export class MooBeam extends Scene {
                 texture: new Texture("assets/grass2.png")
             }),
             road_material: new Material(new defs.Phong_Shader(), {
-                color: hex_color("#454545"), ambient: 1, diffusivity: 1, specularity: 1
+                color: hex_color("#262626"), ambient: 1, diffusivity: 1, specularity: 1
             }),
             dash_material: new Material(new defs.Phong_Shader(), {
                 color: hex_color("#cfcfcf"), ambient: 1, diffusivity: 1, specularity: 1
             }),
+            dash_yellow_material: new Material(new defs.Phong_Shader(), {
+                color: hex_color("#78640c"), ambient: 1, diffusivity: 1, specularity: 1
+            }),
             skyscraper_material1: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#000000"), ambient: 0.7, diffusivity: 1, specularity: 1,
+                color: hex_color("#000000"), ambient: 0.4, diffusivity: 1, specularity: 1,
                 texture: new Texture("assets/skyscraper1.jpg")
             }),
             skyscraper_material2: new Material(new defs.Fake_Bump_Map(1), {
@@ -223,6 +226,10 @@ export class MooBeam extends Scene {
             }),
             building_material2: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#36454F"), ambient: 0.6, diffusivity: 0.5, specularity: 1,
+                texture: new Texture("assets/skyscraper5.png")
+            }),
+            lamp_mat: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#36454F"), ambient: 0.6, diffusivity: 0.1, specularity: 1,
                 texture: new Texture("assets/skyscraper5.png")
             })
         }
@@ -729,6 +736,7 @@ export class MooBeam extends Scene {
                 }
                 if (this.up || this.down) {
                     this.player.z += this.player.velocity.z * x_comp;
+
                     this.player.x += this.player.velocity.z * z_comp;
                 }
             }
@@ -810,6 +818,14 @@ export class MooBeam extends Scene {
                     break;
             }
         }
+        for (let i= -3; i < 6; i++) {
+            for (let j = -3; j < 6; j++) {
+                this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.translation(3 + 40 * i, 4.5, 5 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)), this.materials.lamp_mat);
+                this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.translation(-3 + 40 * i, 4.5, 5 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)).times(Mat4.rotation(Math.PI, 0, 1, 0)), this.materials.lamp_mat);
+                this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.translation(3 + 40 * i, 4.5, -4 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)), this.materials.lamp_mat);
+                this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.translation(-3 + 40 * i, 4.5, -4 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)).times(Mat4.rotation(Math.PI, 0, 1, 0)), this.materials.lamp_mat);
+            }
+        }
 
         // Draw roads
         let x_pos_road = -this.world_size + 40;
@@ -845,7 +861,7 @@ export class MooBeam extends Scene {
                         .times(Mat4.scale(.2, this.world_size, .5))
                         .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
 
-                    this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
+                    this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_yellow_material);
                 }
                 dash_pos += 5.9;
             }
@@ -883,7 +899,7 @@ export class MooBeam extends Scene {
                         .times(Mat4.scale(.5, this.world_size, .2))
                         .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
 
-                    this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
+                    this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_yellow_material);
                 }
                 dash_pos += 5.9;
             }
