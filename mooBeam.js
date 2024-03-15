@@ -29,7 +29,7 @@ class Player {
         this.z = z;
         this.velocity = {x: 0, y: 0, z: 0};
         this.acceleration = {x: 0.04, y: 0, z: 0.04};
-        this.max_speed = 0.45;
+        this.max_speed = 0.45; // default = 0.45
     }
 }
 class Skyscraper {
@@ -984,6 +984,35 @@ export class MooBeam extends Scene {
             .times(Mat4.scale(123.5, this.world_size, 0.075))
             .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
         this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
+
+        // borders for sidewalk
+        this.road_state = Mat4.identity()
+            .times(Mat4.translation(124.5, 0.02, 0))
+            .times(Mat4.scale(.5, this.world_size, 125))
+            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+        this.shapes.road.draw(context, program_state, this.road_state, this.materials.sidewalk_material);
+
+        this.road_state = Mat4.identity()
+            .times(Mat4.translation(-124.5, 0.02, 0))
+            .times(Mat4.scale(.5, this.world_size, 125))
+            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+        this.shapes.road.draw(context, program_state, this.road_state, this.materials.sidewalk_material);
+
+        this.road_state = Mat4.identity()
+            .times(Mat4.translation(0, 0.02, 124.5))
+            .times(Mat4.scale(125, this.world_size, .5))
+            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+        this.shapes.road.draw(context, program_state, this.road_state, this.materials.sidewalk_material);
+
+        this.road_state = Mat4.identity()
+            .times(Mat4.translation(0, 0.02, -124.5))
+            .times(Mat4.scale(125, this.world_size, .5))
+            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+        this.shapes.road.draw(context, program_state, this.road_state, this.materials.sidewalk_material);
 
         // Draw cows
         let cows_animating = this.is_animating(program_state)
