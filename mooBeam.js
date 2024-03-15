@@ -79,6 +79,7 @@ export class MooBeam extends Scene {
         this.shapes = {
             object: new defs.Subdivision_Sphere(4),
             ufo: new Shape_From_File("assets/ufo.obj"),
+            explosion: new Shape_From_File("assets/explosion.obj"),
             cow: new Shape_From_File("assets/cow.obj"),
             lamp: new Shape_From_File("assets/lamp.obj"),
             bench: new Shape_From_File("assets/bench.obj"),
@@ -186,6 +187,34 @@ export class MooBeam extends Scene {
             ufo_material: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#2a0430"), ambient: .25, diffusivity: 1, specularity: 1,
                 texture: new Texture("assets/ufo.jpg")
+            }),
+            explosion_yellow_material: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#feffb5"), ambient: 0.9, diffusivity: 0.1, specularity: 0,
+                texture: new Texture("assets/explosion.jpg")
+            }),
+            explosion_yellow2_material: new Material(new defs.Phong_Shader(), {
+                color: hex_color("#F1BC31"), ambient: 0.7, diffusivity: 0.1, specularity: 0,
+                texture: new Texture("assets/explosion.jpg")
+            }),
+            explosion_orange_material: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#E25822"), ambient: 0.7, diffusivity: 0.1, specularity: 0,
+                texture: new Texture("assets/explosion.jpg")
+            }),
+            explosion_red_material: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#B22222"), ambient: 0.7, diffusivity: 0.1, specularity: 0,
+                texture: new Texture("assets/explosion.jpg")
+            }),
+            explosion_red2_material: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#7C0A02"), ambient: 0.7, diffusivity: 0.1, specularity: 0,
+                texture: new Texture("assets/explosion.jpg")
+            }),
+            explosion_gray_material: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#A9A9A9"), ambient: 0.7, diffusivity: 0.1, specularity: 0,
+                texture: new Texture("assets/explosion.jpg")
+            }),
+            explosion_black_material: new Material(new defs.Fake_Bump_Map(1), {
+                color: hex_color("#000000"), ambient: 0.7, diffusivity: 0.1, specularity: 0,
+                texture: new Texture("assets/explosion.jpg")
             }),
             shadow_material: new Material(new defs.Phong_Shader(1), {
                 color: hex_color("#071329", 0.88), ambient: 0.1, diffusivity: 0, specularity: 0,
@@ -455,7 +484,6 @@ export class MooBeam extends Scene {
 
     animate_ufo_crash(program_state) {
         let local_time = program_state.animation_time / 1000 - this.final_local_time;
-
         if (this.player.y > 7) {
             //animation broken down in chronological order
             if (local_time > 0.0 && local_time < 0.8) {
@@ -730,6 +758,100 @@ export class MooBeam extends Scene {
             if (this.crash) {
                 displayEnd(true, this.score)
                 this.animate_ufo_crash(program_state);
+
+                let local_time = program_state.animation_time/1000 - this.final_local_time - 2.27 - 0.75; // 0.75 is time between hitting floor and explosion
+                if (local_time >= 0 && local_time < 1) {
+                    this.explosion_state1 = Mat4.identity()
+                        .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
+                        .times(Mat4.scale(local_time * 9, local_time * 9, local_time * 9));
+                    this.explosion_state2 = Mat4.identity()
+                        .times(Mat4.translation(this.player.x, this.player.y, this.player.z-2))
+                        .times(Mat4.scale(local_time * 12, local_time * 5, local_time * 12))
+                        .times(Mat4.rotation(Math.PI, 1, 0, 0));
+                    this.explosion_state3 = Mat4.identity()
+                        .times(Mat4.translation(this.player.x, this.player.y, this.player.z-2))
+                        .times(Mat4.scale(local_time * 12, local_time * 5, local_time * 12))
+                        .times(Mat4.rotation(3*Math.PI/2, 1, 0, 0));
+                    this.explosion_state4= Mat4.identity()
+                        .times(Mat4.translation(this.player.x+5, this.player.y, this.player.z))
+                        .times(Mat4.scale(local_time * 12, local_time * 3, local_time * 12))
+                        .times(Mat4.rotation(Math.PI/2, 0, 1, 0));
+                    this.explosion_state5= Mat4.identity()
+                        .times(Mat4.translation(this.player.x-5, this.player.y, this.player.z))
+                        .times(Mat4.scale(local_time * 12, local_time * 2, local_time * 12))
+                        .times(Mat4.rotation(3*Math.PI/2, 0, 1, 0));
+
+                    this.shapes.explosion.draw(context, program_state, this.explosion_state1, this.materials.explosion_yellow_material);
+                    this.shapes.explosion.draw(context, program_state, this.explosion_state2, this.materials.explosion_red2_material);
+                    this.shapes.explosion.draw(context, program_state, this.explosion_state3, this.materials.explosion_yellow2_material);
+                    this.shapes.explosion.draw(context, program_state, this.explosion_state4, this.materials.explosion_orange_material);
+                    this.shapes.explosion.draw(context, program_state, this.explosion_state5, this.materials.explosion_red_material);
+                }
+                if (local_time >= 1 && local_time < 2) {
+                    this.explosion_state1 = Mat4.identity()
+                        .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
+                        .times(Mat4.scale(9, 9, 9));
+                    this.explosion_state2 = Mat4.identity()
+                        .times(Mat4.translation(this.player.x, this.player.y, this.player.z-2))
+                        .times(Mat4.scale(12, 5, 12))
+                        .times(Mat4.rotation(Math.PI, 1, 0, 0));
+                    this.explosion_state3 = Mat4.identity()
+                        .times(Mat4.translation(this.player.x, this.player.y, this.player.z-2))
+                        .times(Mat4.scale(12, 5, 12))
+                        .times(Mat4.rotation(3*Math.PI/2, 1, 0, 0));
+                    this.explosion_state4 = Mat4.identity()
+                        .times(Mat4.translation(this.player.x+5, this.player.y, this.player.z))
+                        .times(Mat4.scale(12, 3, 12))
+                        .times(Mat4.rotation(Math.PI/2, 0, 1, 0));
+                    this.explosion_state5 = Mat4.identity()
+                        .times(Mat4.translation(this.player.x-5, this.player.y, this.player.z))
+                        .times(Mat4.scale(12, 2, 12))
+                        .times(Mat4.rotation(3*Math.PI/2, 0, 1, 0));
+
+                    this.shapes.explosion.draw(context, program_state, this.explosion_state1, this.materials.explosion_yellow_material);
+                    this.shapes.explosion.draw(context, program_state, this.explosion_state2, this.materials.explosion_red2_material);
+                    this.shapes.explosion.draw(context, program_state, this.explosion_state3, this.materials.explosion_yellow2_material);
+                    this.shapes.explosion.draw(context, program_state, this.explosion_state4, this.materials.explosion_orange_material);
+                    this.shapes.explosion.draw(context, program_state, this.explosion_state5, this.materials.explosion_red_material);
+                }
+                if (local_time >= 2 && local_time < 3) {
+                    this.explosion_state1 = this.explosion_state1.times(Mat4.scale(1.001, 1.001, 1.001));
+                    this.explosion_state2 = this.explosion_state2.times(Mat4.scale(1.001, 1.001, 1.001));
+                    this.explosion_state3 = this.explosion_state3.times(Mat4.scale(1.001, 1.001, 1.001));
+                    this.explosion_state4 = this.explosion_state4.times(Mat4.scale(1.001, 1.001, 1.001));
+                    this.explosion_state5 = this.explosion_state5.times(Mat4.scale(1.001, 1.001, 1.001));
+
+                    this.shapes.explosion.draw(context, program_state, this.explosion_state1, this.materials.explosion_black_material);
+                    this.shapes.explosion.draw(context, program_state, this.explosion_state2, this.materials.explosion_gray_material);
+                    this.shapes.explosion.draw(context, program_state, this.explosion_state3, this.materials.explosion_black_material);
+                    this.shapes.explosion.draw(context, program_state, this.explosion_state4, this.materials.explosion_gray_material);
+                    this.shapes.explosion.draw(context, program_state, this.explosion_state5, this.materials.explosion_black_material);
+                }
+                if (local_time >= 3 && local_time < 4) {
+                    this.explosion_state1 = this.explosion_state1.times(Mat4.scale(1.001, 1.001, 1.001));
+                    this.explosion_state2 = this.explosion_state2.times(Mat4.scale(1.001, 1.001, 1.001));
+                    this.explosion_state3 = this.explosion_state3.times(Mat4.scale(1.001, 1.001, 1.001));
+                    this.explosion_state4 = this.explosion_state4.times(Mat4.scale(1.001, 1.001, 1.001));
+                    this.explosion_state5 = this.explosion_state5.times(Mat4.scale(1.001, 1.001, 1.001));
+
+                    this.shapes.explosion.draw(context, program_state, this.explosion_state2, this.materials.explosion_gray_material);
+                    this.shapes.explosion.draw(context, program_state, this.explosion_state3, this.materials.explosion_black_material);
+                    this.shapes.explosion.draw(context, program_state, this.explosion_state4, this.materials.explosion_gray_material);
+                    this.shapes.explosion.draw(context, program_state, this.explosion_state5, this.materials.explosion_black_material);
+                }
+
+                if (local_time >= 4 && local_time < 6) {
+                    this.explosion_state1 = this.explosion_state1.times(Mat4.scale(1.001, 1.001, 1.001));
+                    this.explosion_state2 = this.explosion_state2.times(Mat4.scale(1.001, 1.001, 1.001));
+                    this.explosion_state3 = this.explosion_state3.times(Mat4.scale(1.001, 1.001, 1.001));
+                    this.explosion_state4 = this.explosion_state4.times(Mat4.scale(1.001, 1.001, 1.001));
+                    this.explosion_state5 = this.explosion_state5.times(Mat4.scale(1.001, 1.001, 1.001));
+
+                    this.shapes.explosion.draw(context, program_state, this.explosion_state3, this.materials.explosion_black_material);
+                    this.shapes.explosion.draw(context, program_state, this.explosion_state4, this.materials.explosion_gray_material);
+                    this.shapes.explosion.draw(context, program_state, this.explosion_state5, this.materials.explosion_black_material);
+                }
+
             } else {
                 displayEnd(false, this.score)
             }
