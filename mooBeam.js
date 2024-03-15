@@ -497,15 +497,15 @@ export class MooBeam extends Scene {
         if (this.player.y > 7) {
             //animation broken down in chronological order
             if (local_time > 0.0 && local_time < 0.8) {
-                this.ufo_state = this.ufo_state.times(Mat4.rotation(0.2, 0.4, 1, 0))
+                this.ufo_state = this.ufo_state.times(Mat4.rotation(0.2, 0.4, 1.2, 0))
             }
             if (local_time >= 0.8 && local_time < 10) {
                 this.ufo_state = Mat4.identity().times(Mat4.translation(this.player.x, this.player.y, this.player.z))
                     .times(Mat4.translation(0, -2 * (local_time * 2.1 - 2.8) ** 2 + 2, 0))
-                    .times(Mat4.rotation(local_time * 6, 0, 1, 0))
-                    .times(Mat4.rotation(0.5, 1, 0, 0))
-                if (local_time > 1.5) {
-                    this.player.y -= 0.5;
+                    .times(Mat4.rotation(local_time * 8, 0, 1, 0))
+                    .times(Mat4.rotation(0.35, 1, 0, 0))
+                if (local_time > 1.5 && local_time < 3) {
+                    this.player.y -= 0.5 * 0.007*local_time**2 ;
                 }
                 if (local_time > 1.7) {
                     return true;
@@ -771,22 +771,22 @@ export class MooBeam extends Scene {
                     let local_time = program_state.animation_time/1000 - this.final_local_time - 2.27 - 0.65;
                     if (local_time >= 0 && local_time < 1.5) {
                         this.explosion_state1 = Mat4.identity()
-                            .times(Mat4.translation(this.player.x, this.player.y-5, this.player.z))
+                            .times(Mat4.translation(this.player.x, 0, this.player.z))
                             .times(Mat4.scale(local_time * 9, local_time * 9, local_time * 9));
                         this.explosion_state2 = Mat4.identity()
-                            .times(Mat4.translation(this.player.x, this.player.y-5, this.player.z-2))
+                            .times(Mat4.translation(this.player.x, 0, this.player.z-2))
                             .times(Mat4.scale(local_time * 15, local_time * 5, local_time * 15))
                             .times(Mat4.rotation(Math.PI, 1, 0, 0));
                         this.explosion_state3 = Mat4.identity()
-                            .times(Mat4.translation(this.player.x, this.player.y-5, this.player.z-2))
+                            .times(Mat4.translation(this.player.x, 0, this.player.z-2))
                             .times(Mat4.scale(local_time * 15, local_time * 5, local_time * 15))
                             .times(Mat4.rotation(3*Math.PI/2, 1, 0, 0));
                         this.explosion_state4= Mat4.identity()
-                            .times(Mat4.translation(this.player.x+5, this.player.y-5, this.player.z))
+                            .times(Mat4.translation(this.player.x+5, 0, this.player.z))
                             .times(Mat4.scale(local_time * 15, local_time * 3, local_time * 15))
                             .times(Mat4.rotation(Math.PI/2, 0, 1, 0));
                         this.explosion_state5= Mat4.identity()
-                            .times(Mat4.translation(this.player.x-5, this.player.y-5, this.player.z))
+                            .times(Mat4.translation(this.player.x-5, 0, this.player.z))
                             .times(Mat4.scale(local_time * 15, local_time * 2, local_time * 15))
                             .times(Mat4.rotation(3*Math.PI/2, 0, 1, 0));
 
