@@ -33,7 +33,7 @@ class Player {
         this.z = z;
         this.velocity = {x: 0, y: 0, z: 0};
         this.acceleration = {x: 0.04, y: 0, z: 0.04};
-        this.max_speed = 0.45; // default = 0.45
+        this.max_speed = 0.5;
     }
 }
 class Skyscraper {
@@ -190,7 +190,7 @@ export class MooBeam extends Scene {
                 color: hex_color("#FFFF00", 0.5), ambient: 0.7, diffusivity: 0.5, specularity: 0
             }),
             ufo_material: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#2a0430"), ambient: .25, diffusivity: 1, specularity: 1,
+                color: hex_color("#2a0430"), ambient: .35, diffusivity: 1, specularity: 0.5,
                 texture: new Texture("assets/ufo.jpg")
             }),
             explosion_yellow_material: new Material(new defs.Fake_Bump_Map(1), {
@@ -465,9 +465,7 @@ export class MooBeam extends Scene {
         } else { return false; }
     }
 
-    hasEscapedBounds() {
-        return Math.sqrt(this.player.x**2 + this.player.z**2) > this.world_size-this.ufo_radius-2;
-    }
+    hasEscapedBounds() { return Math.sqrt(this.player.x**2 + this.player.z**2) > this.world_size-this.ufo_radius-2; }
 
     animate_cow(i, program_state) {
         let speed = 0.0008;
