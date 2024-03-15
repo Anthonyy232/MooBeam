@@ -101,6 +101,7 @@ export class MooBeam extends Scene {
         this.time = 90;
         this.show_beam = false;
         this.beaming = false;
+        this.beam_offset = Mat4.identity();
         this.desired = null;
         this.up = false;
         this.down = false;
@@ -174,6 +175,7 @@ export class MooBeam extends Scene {
         this.cows_states = this.generateCows();
         this.initial_camera_location = Mat4.look_at(vec3(0, 10 + this.starting_location.y, 20), vec3(0, this.starting_location.y, 0), vec3(0, 1 + this.starting_location.y, 0));
         this.final_local_time = 0;
+        this.capture_local_time = 0;
 
         // *** Materials
         this.materials = {
@@ -181,26 +183,26 @@ export class MooBeam extends Scene {
                 color: hex_color("#FFFF00", 0.5), ambient: 0.7, diffusivity: 0.5, specularity: 0
             }),
             ufo_material: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#aeb2b8"), ambient: .2, diffusivity: 0.1, specularity: 1.5,
+                color: hex_color("#2a0430"), ambient: .25, diffusivity: 1, specularity: 1,
                 texture: new Texture("assets/ufo.jpg")
             }),
             shadow_material: new Material(new defs.Phong_Shader(1), {
-                color: hex_color("#000000", 0.89), ambient: 0.1, diffusivity: 0, specularity: 0,
+                color: hex_color("#071329", 0.88), ambient: 0.1, diffusivity: 0, specularity: 0,
             }),
             cow_material: new Material(new defs.Fake_Bump_Map(1), {
                 color: hex_color("#000000"), ambient: 0.7, diffusivity: 0.5, specularity: 0.5,
                 texture: new Texture("assets/cow.jpg")
             }),
             skybox: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#000000"), ambient: 1, diffusivity: 0, specularity: 0,
+                color: hex_color("#000000"), ambient: 1.7, diffusivity: 0, specularity: 0,
                 texture: new Texture("assets/skybox.jpg")
             }),
             floor_material: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#000000"), ambient: 0.7, diffusivity: 0.1, specularity: 0,
-                texture: new Texture("assets/grass2.png")
+                color: hex_color("#000000"), ambient: 0.76, diffusivity: 0.1, specularity: 0,
+                texture: new Texture("assets/grass.jpg")
             }),
             road_material: new Material(new defs.Phong_Shader(), {
-                color: hex_color("#262626"), ambient: 1, diffusivity: 1, specularity: 1
+                color: hex_color("#2c2c2c"), ambient: 1, diffusivity: 1, specularity: 1
             }),
             dash_material: new Material(new defs.Phong_Shader(), {
                 color: hex_color("#cfcfcf"), ambient: 1, diffusivity: 1, specularity: 1
@@ -213,11 +215,11 @@ export class MooBeam extends Scene {
                 texture: new Texture("assets/skyscraper1.jpg")
             }),
             skyscraper_material2: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#000000"), ambient: 0.4, diffusivity: 1, specularity: 1,
+                color: hex_color("#000000"), ambient: 0.56, diffusivity: 1, specularity: 1,
                 texture: new Texture("assets/skyscraper2.png")
             }),
             skyscraper_material3: new Material(new defs.Fake_Bump_Map(1), {
-                color: hex_color("#000000"), ambient: 0.4, diffusivity: 1, specularity: 1,
+                color: hex_color("#000000"), ambient: 0.43, diffusivity: 1, specularity: 1,
                 texture: new Texture("assets/skyscraper3.png")
             }),
             building_material1: new Material(new defs.Fake_Bump_Map(1), {
@@ -466,7 +468,21 @@ export class MooBeam extends Scene {
                 .times(Mat4.translation(0, -2*(local_time*2.2-4)**2+2 , 0))
                 .times(Mat4.rotation(local_time*6, 0,1 , 0))
                 .times(Mat4.rotation(0.5, 1,0 , 0))
+        }
+    }
+    animate_ufo_beam(program_state) {
+        let local_time = program_state.animation_time/1000 - this.capture_local_time;
+        console.log(local_time);
 
+        //animation broken down in chronological order 1.29 seconds total
+        if (local_time > 0.0) {
+            this.ufo_state = this.ufo_state.times(Mat4.rotation(0.3, 0, 1,0))
+            this.ufo_state = this.ufo_state.times(Mat4.translation(0, 0.1*Math.sin((2*Math.PI)*local_time), 0))
+            this.beam_offset = this.beam_offset.times(Mat4.scale(
+                //1 + shrink factor + shake factor
+                1+0.02*Math.sin((2*Math.PI)*local_time)+0.02*Math.sin((2*Math.PI/0.1)*local_time),
+                1+0.02*Math.sin((2*Math.PI)*local_time)+0.02*Math.sin((2*Math.PI/0.1)*local_time),
+                1+0.01*Math.sin((2*Math.PI)*local_time)))
         }
     }
 
@@ -741,10 +757,13 @@ export class MooBeam extends Scene {
                 }
             }
             this.final_local_time = time;
-            this.ufo_state = Mat4.identity()
-                .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
-                .times(Mat4.translation(0, 0.3 * Math.sin(time * 2), 0))
-                .times(Mat4.rotation(time / 2.5, 0, 1, 0))
+            if (!this.show_beam) {
+                this.ufo_state = Mat4.identity()
+                    .times(Mat4.translation(this.player.x, this.player.y, this.player.z))
+                    //idle animation
+                    .times(Mat4.translation(0, 0.3 * Math.sin(time * 3), 0))
+                    .times(Mat4.rotation(time / 1.5, 0, 1, 0))
+            }
         }
 
         // Shadow under UFO
@@ -818,8 +837,8 @@ export class MooBeam extends Scene {
                     break;
             }
         }
-        for (let i= -3; i < 6; i++) {
-            for (let j = -3; j < 6; j++) {
+        for (let i= -3; i < 4; i++) {
+            for (let j = -3; j < 4; j++) {
                 this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.translation(3 + 40 * i, 4.5, 5 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)), this.materials.lamp_mat);
                 this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.translation(-3 + 40 * i, 4.5, 5 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)).times(Mat4.rotation(Math.PI, 0, 1, 0)), this.materials.lamp_mat);
                 this.shapes.lamp.draw(context, program_state, Mat4.identity().times(Mat4.translation(3 + 40 * i, 4.5, -4 + 40 * j)).times(Mat4.scale(1.1, 1.1, 1.1)), this.materials.lamp_mat);
@@ -975,10 +994,16 @@ export class MooBeam extends Scene {
             let beam_state = Mat4.identity()
                 .times(Mat4.translation(this.player.x, this.player.y - this.beam_height, this.player.z))
                 .times(Mat4.scale(this.beam_size, this.beam_height, this.beam_size))
-                .times(Mat4.rotation(3 * Math.PI / 2, 1, 0, 0));
+                .times(Mat4.rotation(3 * Math.PI / 2, 1, 0, 0))
+                .times(this.beam_offset);
+
+            this.animate_ufo_beam(program_state);
             this.shapes.beam.draw(context, program_state, beam_state, this.materials.light_material);
         } else if (!this.end_game) {
             this.shapes.shadow.draw(context, program_state, shadow_state, this.materials.shadow_material);
+            this.capture_local_time = time;
+            this.beam_offset = Mat4.identity();
+        } else {
         }
     }
 }
