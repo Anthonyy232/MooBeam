@@ -205,6 +205,10 @@ export class MooBeam extends Scene {
             dash_material: new Material(new defs.Phong_Shader(), {
                 color: hex_color("#cfcfcf"), ambient: 1, diffusivity: 1, specularity: 1
             }),
+            sidewalk_material: new Material(new defs.Phong_Shader(), {
+                color: hex_color("#d3d3d3"), ambient: 0.7, diffusivity: 0.1, specularity: 0,
+                texture: new Texture("assets/sidewalk.jpg")
+            }),
             dash_yellow_material: new Material(new defs.Phong_Shader(), {
                 color: hex_color("#78640c"), ambient: 1, diffusivity: 1, specularity: 1
             }),
@@ -848,6 +852,20 @@ export class MooBeam extends Scene {
                 this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
 
                 this.road_state = Mat4.identity()
+                    .times(Mat4.translation(x_pos_road + 4.5, 0.02, dash_pos + 18.5))
+                    .times(Mat4.scale(.5, this.world_size, 16))
+                    .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+                this.shapes.road.draw(context, program_state, this.road_state, this.materials.sidewalk_material);
+
+                this.road_state = Mat4.identity()
+                    .times(Mat4.translation(x_pos_road - 4.5, 0.02, dash_pos + 18.5))
+                    .times(Mat4.scale(.5, this.world_size, 16))
+                    .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+                this.shapes.road.draw(context, program_state, this.road_state, this.materials.sidewalk_material);
+
+                this.road_state = Mat4.identity()
                     .times(Mat4.translation(x_pos_road - 3.5, 0.02, dash_pos + 18.5))
                     .times(Mat4.scale(.075, this.world_size, 16.5))
                     .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
@@ -884,6 +902,20 @@ export class MooBeam extends Scene {
                     .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
 
                 this.shapes.road.draw(context, program_state, this.road_state, this.materials.dash_material);
+
+                this.road_state = Mat4.identity()
+                    .times(Mat4.translation(dash_pos + 18.5, 0.02, z_pos_road + 4.5))
+                    .times(Mat4.scale(15.25, this.world_size, .5))
+                    .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+                this.shapes.road.draw(context, program_state, this.road_state, this.materials.sidewalk_material);
+
+                this.road_state = Mat4.identity()
+                    .times(Mat4.translation(dash_pos + 18.5, 0.02, z_pos_road - 4.5))
+                    .times(Mat4.scale(15.25, this.world_size, .5))
+                    .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+
+                this.shapes.road.draw(context, program_state, this.road_state, this.materials.sidewalk_material);
 
                 this.road_state = Mat4.identity()
                     .times(Mat4.translation(dash_pos + 18.5, 0.02, z_pos_road - 3.5))
